@@ -1,5 +1,6 @@
 # Sprint 1 : Daily Scrum 
-Here is the Sprint 1 (Week 1-2) Daily Scrums. (**3/26**)
+Here is the Sprint 1 (Week 1-2) Daily Scrums. 
+(**3/26**)
 
 **Saran : Backend Developer**
 Today, I completed the backend development, including authentication, course search, and eligibility endpoints, and fully connected it to the AWS RDS database. I tested all endpoints in Postman to confirm everything is working correctly and returning accurate data.
