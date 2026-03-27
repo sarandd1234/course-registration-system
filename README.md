@@ -1,2 +1,3 @@
-# course-registration-system
-Here is a repo for our two sprints and the files. 
+# Sprint 1 : Daily Scrum 
+Here is the Sprint 1 (Week 1-2) Daily Scrums. 
+
