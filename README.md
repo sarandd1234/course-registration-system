@@ -19,3 +19,16 @@ I don’t have any blockers right now, but I may need support during integration
 **Jeremy – QA Analyst**
 Today, I am currently reviewing the sprint requirements and preparing test cases for authentication, course search, and eligibility. Now that the backend and database are available, I am beginning testing using Postman and will start documenting results with screenshots.
 No blockers at the moment.
+
+(**4/2**)
+
+**Saran : Backend Developer**
+
+**Madilynn : Database Engineer** 
+Yesterday, I focused on improving the database design and validating its structure. I updated the ERD to ensure it fully adheres to Third Nominal Form and made sure those changes were accurately reflected in the corresponding entity table. I also ran several COUNT and JOIN queries to verify data relationships and confirm everything is functioning as expected. 
+In addition, I successfully executed the table creation script and confirmed the output was correct. To further validate the schema, I ran DESCRIBE on each table to check that all fields, data types, and constraints were properly defined. 
+Today, I’ve completed my assigned tasks and plan to connect with my team to prepare for the second sprint and align on next steps. I don’t have any blockers at this time.
+
+**Tiffany : Frontend Developer**
+
+**Jeremy: QA Analyst**
