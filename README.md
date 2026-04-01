@@ -23,6 +23,9 @@ No blockers at the moment.
 (**4/2**)
 
 **Saran : Backend Developer**
+Yesterday, I finalized backend integration with the AWS RDS database and supported the team during frontend and testing integration. I helped troubleshoot connection issues, including environment setup such as ensuring proper .env configuration across team members, so the API could run correctly locally.
+Today, I am continuing to support integration across the frontend and QA testing, assisting with any issues that come up, and making sure all components are working together smoothly for the sprint review and demo. I am also helping verify that all endpoints return correct data during testing.
+I don’t have any blockers at the moment.
 
 **Madilynn : Database Engineer** 
 Yesterday, I focused on improving the database design and validating its structure. I updated the ERD to ensure it fully adheres to Third Nominal Form and made sure those changes were accurately reflected in the corresponding entity table. I also ran several COUNT and JOIN queries to verify data relationships and confirm everything is functioning as expected. 
