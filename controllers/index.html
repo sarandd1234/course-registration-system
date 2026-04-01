@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Registration System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <header>
+    <h1>Course Registration System</h1>
+    <nav>
+      <button onclick="showPage('loginPage')">Login</button>
+      <button onclick="showPage('coursePage')">Courses</button>
+    </nav>
+  </header>
+
+  <div id="loginPage" class="page">
+    <h2>Login</h2>
+
+    <input type="text" id="studentID" placeholder="Student ID" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <button onclick="handleLogin()">Login</button>
+
+    <p id="loginMessage"></p>
+  </div>
+
+  <div id="coursePage" class="page" style="display:none;">
+    <h2>Search Courses</h2>
+
+    <input type="text" id="department" placeholder="Department (e.g. INFO)" />
+    <input type="text" id="courseNumber" placeholder="Course Number" />
+    <input type="text" id="instructor" placeholder="Instructor (optional)" />
+
+    <button onclick="searchCourses()">Search</button>
+
+    <div id="results"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
