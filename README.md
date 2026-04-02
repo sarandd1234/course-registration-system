@@ -35,3 +35,4 @@ Today, I’ve completed my assigned tasks and plan to connect with my team to pr
 **Tiffany : Frontend Developer**
 
 **Jeremy: QA Analyst**
+Yesterday, I focused on gathering the requirements and understanding what was required of me from my role. Today my role as the QA focused on bridging the gap between our technical requirements and functional, reliable system. I approached the project by verifying each layer of the stack ensuring our authentication API managed credentials confirming that our 3NF database scheme maintained integrity under pressure. Part of my process took place using MySQL Workbench in which I proved that our relationships and constraints were actively protecting the system from duplicate enrollments. I worked to ensure that every user action was backed by solid, verifiable logic with a well structured data foundation 
