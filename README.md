@@ -45,8 +45,8 @@ Here is the Sprint 2 (Week 3-4) Daily Scrums.
 Yesterday, I fixed the frontend/API undefined issue, completed and tested prerequisite validation, built the enrollment endpoint structure with prerequisite blocking and Enrollment insertion, created the waitlist endpoint structure, and supported frontend integration with the correct API contracts. The remaining items pending are the seat capacity check and live waitlist table integration once the database updates are added. Today,
 
 **Tiffany : Frontend Developer**
-Yesterday, I worked on the main frontend features for Sprint 2. I built the Enroll button and connected it to the backend, handling success and error messages. I also created the Join Waitlist button and started connecting it to the waitlist API. In addition, I set up the basic dashboard layout and built the confirmation popup UI for successful enrollment.
+Yesterday, I worked on the main frontend features for Sprint 2. I built the Enroll button and connected it to the backend, handling success and error messages. I also created the Join Waitlist button and started integrating it with the waitlist API. In addition, I set up the basic dashboard layout and built the confirmation popup UI for successful enrollment.
 
-Today, I’m focusing on improving API integration, fixing any undefined values, and testing different cases like failed enrollments and waitlist behavior. I’m also making sure the UI updates correctly based on backend responses.
+Today, I’m continuing to improve API integration and making sure the UI correctly handles different responses like prerequisite failures and full classes. I’m also testing different user scenarios and working on making the frontend flow smoothly with the backend.
 
 I don’t have any blockers right now, but I’ll reach out if any issues come up during integration.
