@@ -1,4 +1,4 @@
-# Sprint 1 : Daily Scrum 
+# Sprint 1 & 2 : Daily Scrum 
 Here is the Sprint 1 (Week 1-2) Daily Scrums. 
 (**3/26**)
 
@@ -37,3 +37,9 @@ Yesterday, I focused on building out the core frontend functionality, including 
 
 **Jeremy: QA Analyst**
 Yesterday, I focused on gathering the requirements and understanding what was required of me from my role. Today my role as the QA focused on bridging the gap between our technical requirements and functional, reliable system. I approached the project by verifying each layer of the stack ensuring our authentication API managed credentials confirming that our 3NF database scheme maintained integrity under pressure. Part of my process took place using MySQL Workbench in which I proved that our relationships and constraints were actively protecting the system from duplicate enrollments. I worked to ensure that every user action was backed by solid, verifiable logic with a well structured data foundation 
+
+Here is the Sprint 2 (Week 3-4) Daily Scrums. 
+(**4/8**)
+
+**Saran : Backend Developer**
+Yesterday, I fixed the frontend/API undefined issue, completed and tested prerequisite validation, built the enrollment endpoint structure with prerequisite blocking and Enrollment insertion, created the waitlist endpoint structure, and supported frontend integration with the correct API contracts. The remaining items pending are the seat capacity check and live waitlist table integration once the database updates are added. Today, 
