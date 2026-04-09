@@ -50,3 +50,6 @@ Yesterday, I worked on the main frontend features for Sprint 2. I built the Enro
 Today, I’m continuing to improve API integration and making sure the UI correctly handles different responses like prerequisite failures and full classes. I’m also testing different user scenarios and working on making the frontend flow smoothly with the backend.
 
 I don’t have any blockers right now, but I’ll reach out if any issues come up during integration.
+
+**Jeremy : QA Tester/Frontend Developer **
+Yesterday I looked at the user stories and broke down each task into managable tasks. I ensured that each task was specific and actionable and small enough that it would allow for each group member to complete. Today I will ensure that I understand what is required of me to complete each task given in the user stories. I will also start working on designing the layout of the web pages on paper as a rough idea to understand how a new user would navigate through the web page and make everything accessible within 3 clicks and minimize scrolling.
