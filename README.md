@@ -42,14 +42,15 @@ Here is the Sprint 2 (Week 3-4) Daily Scrums.
 (**4/08**)
 
 **Saran : Backend Developer**
-Yesterday, I fixed the frontend/API undefined issue, completed and tested prerequisite validation, built the enrollment endpoint structure with prerequisite blocking and Enrollment insertion, created the waitlist endpoint structure, and supported frontend integration with the correct API contracts. The remaining items pending are the seat capacity check and live waitlist table integration once the database updates are added. Today,
+Yesterday, I fixed the frontend/API undefined response issue so the frontend now receives the correct data fields consistently. I also completed and tested the prerequisite validation logic, making sure students are blocked from enrolling when required prerequisites are not met. In addition, I built the enrollment endpoint structure, including prerequisite blocking and Enrollment table insertion, and created the waitlist endpoint structure for courses that reach capacity. I also supported frontend integration by providing Tiffany with the correct API contracts and response formats needed to connect the UI to the backend.
+
+Today, I will continue working on the remaining enrollment logic by adding the seat capacity check once the database updates are finalized. I will also help connect the live waitlist table integration after Madilynn completes the related database changes. In addition, I’ll support frontend testing with Tiffany to make sure the add course workflow, confirmation messages, and backend responses display correctly in the interface, while also helping Jeremy verify that waitlist and enrollment features function smoothly end-to-end.
+At the moment, I do not have any blockers, but the final seat validation and live waitlist integration depend on the database updates being completed.
 
 **Tiffany : Frontend Developer**
 Yesterday, I worked on the main frontend features for Sprint 2. I built the Enroll button and connected it to the backend, handling success and error messages. I also created the Join Waitlist button and started integrating it with the waitlist API. In addition, I set up the basic dashboard layout and built the confirmation popup UI for successful enrollment.
-
 Today, I’m continuing to improve API integration and making sure the UI correctly handles different responses like prerequisite failures and full classes. I’m also testing different user scenarios and working on making the frontend flow smoothly with the backend.
-
 I don’t have any blockers right now, but I’ll reach out if any issues come up during integration.
 
-**Jeremy : QA Tester/Frontend Developer **
+**Jeremy: QA Tester/Frontend Developer**
 Yesterday I looked at the user stories and broke down each task into managable tasks. I ensured that each task was specific and actionable and small enough that it would allow for each group member to complete. Today I will ensure that I understand what is required of me to complete each task given in the user stories. I will also start working on designing the layout of the web pages on paper as a rough idea to understand how a new user would navigate through the web page and make everything accessible within 3 clicks and minimize scrolling.
