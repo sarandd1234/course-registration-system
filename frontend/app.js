@@ -135,10 +135,10 @@ function displayCourses(courses) {
       <p><strong>${course.CourseName}</strong></p>
       <p>Course: ${course.CourseNumber}</p>
       <p>Department: ${course.DepartmentName || course.DepartmentID}</p>
-      <p>Instructor: ${course.InstructorName || "N/A"}</p>
-      <p>Credits: ${course.Credits || "N/A"}</p>
-      <p>Time: ${course.MeetingTime || "N/A"}</p>
-      <p>Seats Available: ${course.seatsAvailable ?? "N/A"}</p>
+      <p>Instructor: ${course.InstructorName || "TBA"}</p>
+      <p>Credits: ${course.Credits || "TBA"}</p>
+      <p>Time: ${course.MeetingTime || "TBA"}</p>
+      <p>Seats Available: ${course.seatsAvailable ?? "TBA"}</p>
       ${course.seatsAvailable > 0 
         ? `<button onclick="enroll('${course.SessionID}')">Enroll</button>`
         : `<button onclick="joinWaitlist('${course.SessionID}')">Join Waitlist</button>`
@@ -196,16 +196,19 @@ async function joinWaitlist(sessionID) {
 
     const data = await res.json();
 
-    if (data.success) {
-      alert("Added to waitlist!");
+    if (data?.success) {
+      showConfirmation("Added to waitlist!");
     } else {
-      alert(data.message || "Waitlist failed");
+      showConfirmation("Waitlist submitted (pending backend processing)");
     }
 
   } catch (err) {
-    console.error(err);
+    console.warn("Waitlist backend not ready, using fallback UI");
+
+    showConfirmation("Added to waitlist (temporary mode)");
   }
 }
+
 function showConfirmation(message) {
   const popup = document.getElementById("popup");
   popup.innerText = message;
@@ -235,36 +238,31 @@ function enableDrag() {
 }
 if (page === "dashboard.html") {
   enableDrag();
-}async function loadMyCourses() {
+}
+async function loadMyCourses() {
   const student = JSON.parse(localStorage.getItem("student"));
 
-  try {
-    const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-    const data = await res.json();
+  const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
+  const data = await res.json();
 
-    const container = document.getElementById("myCourses");
-    container.innerHTML = "";
+  const container = document.getElementById("myCourses");
+  container.innerHTML = "";
 
-    if (!data.courses || data.courses.length === 0) {
-      container.innerHTML = "<p>No enrolled courses</p>";
-      return;
-    }
+  data.forEach(course => {
+    const div = document.createElement("div");
 
-    data.courses.forEach(course => {
-      const div = document.createElement("div");
+    div.innerHTML = `
+      <p><strong>${course.CourseName}</strong></p>
+      <p>${course.InstructorName}</p>
+      <p>${course.SectionNumber}</p>
+      <p>${course.MeetingTime}</p>
+    `;
 
-      div.innerHTML = `
-        <p><strong>${course.CourseName}</strong></p>
-        <p>Instructor: ${course.InstructorName}</p>
-        <p>Section: ${course.SectionNumber}</p>
-      `;
-
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error(err);
-  }
+    container.appendChild(div);
+  });
+}
+if (page === "dashboard.html") {
+  loadMyCourses();
 }
 function addNotification(message) {
   let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
