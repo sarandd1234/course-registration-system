@@ -5,6 +5,10 @@ require("dotenv").config();
 const authRoutes = require("./routes/authRoutes");
 const courseRoutes = require("./routes/courseRoutes");
 const eligibilityRoutes = require("./routes/eligibilityRoutes");
+const enrollmentRoutes = require("./routes/enrollmentRoutes");
+const waitlistRoutes = require("./routes/waitlistRoutes");
+const dropRoutes = require("./routes/dropRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 const db = require("./db");
 
 const app = express();
@@ -12,19 +16,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Main API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/eligibility", eligibilityRoutes);
+app.use("/api/enroll", enrollmentRoutes);
+app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/waitlist", waitlistRoutes);
+app.use("/api/drop", dropRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
+// Home Route
 app.get("/", (req, res) => {
   res.send("Backend API is running.");
 });
 
+// Test DB Connection
 app.get("/test-db", async (req, res) => {
   try {
     const [rows] = await db.execute("SHOW TABLES");
     res.json({
       success: true,
+      message: "Database connection successful",
       tables: rows
     });
   } catch (error) {
@@ -37,10 +50,15 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
+// Test Students
 app.get("/test-students", async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM Students");
-    res.json(rows);
+    res.json({
+      success: true,
+      message: "Students retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Students error:", error);
     res.status(500).json({
@@ -51,10 +69,15 @@ app.get("/test-students", async (req, res) => {
   }
 });
 
+// Test Courses
 app.get("/test-courses", async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM Courses");
-    res.json(rows);
+    res.json({
+      success: true,
+      message: "Courses retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Courses error:", error);
     res.status(500).json({
@@ -65,10 +88,15 @@ app.get("/test-courses", async (req, res) => {
   }
 });
 
+// Test Departments
 app.get("/test-departments", async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM Departments");
-    res.json(rows);
+    res.json({
+      success: true,
+      message: "Departments retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Departments error:", error);
     res.status(500).json({
@@ -79,10 +107,15 @@ app.get("/test-departments", async (req, res) => {
   }
 });
 
+// Test Enrollment
 app.get("/test-enrollment", async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM Enrollment");
-    res.json(rows);
+    res.json({
+      success: true,
+      message: "Enrollment data retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Enrollment error:", error);
     res.status(500).json({
