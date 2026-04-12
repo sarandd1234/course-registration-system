@@ -9,8 +9,8 @@ body {
   padding: 0;
 }
 .page {
-  max-width: 400px;      /* controls card width */
-  margin: 40px auto;     /* top/bottom 40px, auto left/right to center */
+  max-width: 400px;      
+  margin: 40px auto;     
   padding: 30px;
   background-color: #fff;
   border-radius: 12px;
@@ -24,7 +24,7 @@ body {
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 16px;
-  box-sizing: border-box; /* THIS fixes the input touching edges */
+  box-sizing: border-box; 
 }
 
 .page button {
@@ -154,4 +154,25 @@ button:hover {
     margin: 20px;
     padding: 20px;
   }
+}
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #198754;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+}
+#widgets {
+  display: flex;
+  gap: 10px;
+}
+
+.widget {
+  padding: 20px;
+  background: #f1f1f1;
+  border-radius: 8px;
+  cursor: grab;
+  
 }
