@@ -4,6 +4,6 @@ const express = require("express");
 const router = express.Router();
 const { dropCourse } = require("../controllers/dropController");
 
-router.delete("/", dropCourse);
+router.post("/", dropCourse);
 
 module.exports = router;

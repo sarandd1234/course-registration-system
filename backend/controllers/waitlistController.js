@@ -37,14 +37,31 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
-    // Temporary response until Waitlist table is created
+    // Check if already on waitlist
+    const [existingWaitlist] = await db.execute(
+      "SELECT * FROM Waitlist WHERE StudentID = ? AND SessionID = ?",
+      [StudentID, SessionID]
+    );
+
+    if (existingWaitlist.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Student is already on the waitlist for this session"
+      });
+    }
+
+    // Insert into Waitlist table
+    await db.execute(
+      "INSERT INTO Waitlist (StudentID, SessionID) VALUES (?, ?)",
+      [StudentID, SessionID]
+    );
+
     return res.status(200).json({
       success: true,
-      message: "Waitlist endpoint created successfully. Waitlist table not ready yet.",
+      message: "Student successfully added to waitlist",
       data: {
         StudentID,
-        SessionID,
-        status: "pending_table_setup"
+        SessionID
       }
     });
 
