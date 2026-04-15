@@ -1,4 +1,4 @@
-// controllers/scheduleController.js
+const db = require("../db");
 
 const getSchedule = async (req, res) => {
   try {
@@ -11,34 +11,38 @@ const getSchedule = async (req, res) => {
       });
     }
 
-    // Temporary placeholder data until DB query is finalized
-    const mockSchedule = [
-      {
-        courseId: "INFO350",
-        courseName: "Database Systems",
-        instructor: "Dr. Smith",
-        time: "Mon/Wed 10:00 AM",
-        location: "Room 205"
-      },
-      {
-        courseId: "INFO465",
-        courseName: "Projects in Information Systems",
-        instructor: "Prof. Johnson",
-        time: "Tue/Thu 2:00 PM",
-        location: "Room 110"
-      }
-    ];
+    const [rows] = await db.execute(`
+      SELECT 
+        e.StudentID,
+        s.SessionID,
+        c.CourseID,
+        c.CourseNumber,
+        c.CourseName,
+        c.Credits,
+        d.DepartmentName,
+        s.SectionNumber,
+        s.MeetingTime,
+        i.InstructorName
+      FROM Enrollment e
+      JOIN Sessions s ON e.SessionID = s.SessionID
+      JOIN Courses c ON s.CourseID = c.CourseID
+      JOIN Departments d ON c.DepartmentID = d.DepartmentID
+      JOIN Instructors i ON s.InstructorID = i.InstructorID
+      WHERE e.StudentID = ?
+      ORDER BY c.CourseNumber, s.SectionNumber
+    `, [studentId]);
 
     return res.status(200).json({
       success: true,
       message: "Schedule retrieved successfully",
-      data: mockSchedule
+      data: rows
     });
   } catch (error) {
     console.error("Schedule error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while retrieving schedule"
+      message: "Server error while retrieving schedule",
+      error: error.message
     });
   }
 };

@@ -2,53 +2,50 @@ const db = require("../db");
 
 const getCourses = async (req, res) => {
   try {
-    const { department, courseNumber, instructor } = req.query;
-
-    let query = `
-      SELECT
+    const [rows] = await db.execute(`
+      SELECT 
         c.CourseID,
         c.CourseNumber,
         c.CourseName,
-        c.Program,
+        c.Credits,
         d.DepartmentName,
         s.SessionID,
-        i.InstructorName
+        s.SectionNumber,
+        s.MeetingTime,
+        s.Capacity,
+        s.isActive,
+        COUNT(e.EnrollmentID) AS enrolledCount,
+        (s.Capacity - COUNT(e.EnrollmentID)) AS seatsAvailable
       FROM Courses c
       JOIN Departments d ON c.DepartmentID = d.DepartmentID
       JOIN Sessions s ON c.CourseID = s.CourseID
-      JOIN Instructors i ON s.InstructorID = i.InstructorID
-      WHERE 1=1
-    `;
-
-    const params = [];
-
-    if (department) {
-      query += ` AND d.DepartmentName LIKE ?`;
-      params.push(`%${department}%`);
-    }
-
-    if (courseNumber) {
-      query += ` AND c.CourseNumber = ?`;
-      params.push(courseNumber);
-    }
-
-    if (instructor) {
-      query += ` AND i.InstructorName LIKE ?`;
-      params.push(`%${instructor}%`);
-    }
-
-    const [rows] = await db.execute(query, params);
+      LEFT JOIN Enrollment e ON s.SessionID = e.SessionID
+      WHERE s.isActive = 1
+      GROUP BY
+        c.CourseID,
+        c.CourseNumber,
+        c.CourseName,
+        c.Credits,
+        d.DepartmentName,
+        s.SessionID,
+        s.SectionNumber,
+        s.MeetingTime,
+        s.Capacity,
+        s.isActive
+      ORDER BY c.CourseNumber, s.SectionNumber
+    `);
 
     return res.status(200).json({
       success: true,
-      count: rows.length,
-      courses: rows
+      message: "Courses retrieved successfully",
+      data: rows
     });
   } catch (error) {
-    console.error("Course fetch error:", error);
+    console.error("Courses error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error"
+      message: "Server error while retrieving courses",
+      error: error.message
     });
   }
 };

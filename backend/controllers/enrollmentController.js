@@ -1,38 +1,5 @@
 const db = require("../db");
 
-// GET /api/enrollments
-const getEnrollments = async (req, res) => {
-  try {
-    const [rows] = await db.execute(`
-      SELECT 
-        e.EnrollmentID,
-        e.StudentID,
-        s.FirstName,
-        s.LastName,
-        e.SessionID,
-        c.CourseID,
-        c.CourseName
-      FROM Enrollment e
-      JOIN Students s ON e.StudentID = s.StudentID
-      JOIN Sessions ses ON e.SessionID = ses.SessionID
-      JOIN Courses c ON ses.CourseID = c.CourseID
-      ORDER BY e.EnrollmentID ASC
-    `);
-
-    return res.status(200).json({
-      success: true,
-      enrollments: rows
-    });
-  } catch (error) {
-    console.error("Fetch enrollments error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
-  }
-};
-
-// POST /api/enrollments
 const enrollStudent = async (req, res) => {
   try {
     const { StudentID, SessionID } = req.body;
@@ -44,11 +11,8 @@ const enrollStudent = async (req, res) => {
       });
     }
 
-    // Check student exists
     const [studentRows] = await db.execute(
-      `SELECT StudentID, FirstName, LastName, Program
-       FROM Students
-       WHERE StudentID = ?`,
+      "SELECT StudentID FROM Students WHERE StudentID = ?",
       [StudentID]
     );
 
@@ -59,16 +23,8 @@ const enrollStudent = async (req, res) => {
       });
     }
 
-    // Check session exists and get related course info
     const [sessionRows] = await db.execute(
-      `SELECT 
-          ses.SessionID,
-          c.CourseID,
-          c.CourseName,
-          c.Program
-       FROM Sessions ses
-       JOIN Courses c ON ses.CourseID = c.CourseID
-       WHERE ses.SessionID = ?`,
+      "SELECT SessionID, Capacity, isActive FROM Sessions WHERE SessionID = ?",
       [SessionID]
     );
 
@@ -79,93 +35,80 @@ const enrollStudent = async (req, res) => {
       });
     }
 
-    const student = studentRows[0];
-    const session = sessionRows[0];
-
-    // Check duplicate enrollment by course
-    const [duplicateRows] = await db.execute(
-      `SELECT e.EnrollmentID
-       FROM Enrollment e
-       JOIN Sessions ses ON e.SessionID = ses.SessionID
-       WHERE e.StudentID = ? AND ses.CourseID = ?`,
-      [StudentID, session.CourseID]
-    );
-
-    if (duplicateRows.length > 0) {
+    if (sessionRows[0].isActive === 0) {
       return res.status(400).json({
         success: false,
-        message: "Student is already enrolled in this course"
+        message: "This session is not active"
       });
     }
 
-    // Check prerequisites
-    const [prereqRows] = await db.execute(
-      `SELECT PrereqCourseID
-       FROM Prerequisites
-       WHERE CourseID = ?`,
-      [session.CourseID]
-    );
-
-    const [completedRows] = await db.execute(
-      `SELECT ses.CourseID
-       FROM Enrollment e
-       JOIN Sessions ses ON e.SessionID = ses.SessionID
-       WHERE e.StudentID = ?`,
-      [StudentID]
-    );
-
-    const completedCourseIds = completedRows.map(row => row.CourseID);
-
-    const missingPrereqs = prereqRows
-      .map(row => row.PrereqCourseID)
-      .filter(prereq => !completedCourseIds.includes(prereq));
-
-    if (missingPrereqs.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Prerequisites not met",
-        eligible: false,
-        missingPrereqs
-      });
-    }
-
-    // Check student program matches course program
-    const programMatch = student.Program === session.Program;
-
-    if (!programMatch) {
-      return res.status(400).json({
-        success: false,
-        message: "Student program does not match course program",
-        eligible: false
-      });
-    }
-
-    // Seat availability check placeholder
-    // Add real capacity/seatsAvailable logic here later if needed
-
-    // Insert enrollment
-    const [result] = await db.execute(
-      `INSERT INTO Enrollment (StudentID, SessionID)
-       VALUES (?, ?)`,
+    const [existingEnrollment] = await db.execute(
+      "SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
       [StudentID, SessionID]
     );
 
-    return res.status(201).json({
+    if (existingEnrollment.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Student is already enrolled in this session"
+      });
+    }
+
+    const [prereqRows] = await db.execute(
+      `
+      SELECT p.PrereqCourseID
+      FROM Sessions s
+      JOIN Courses c ON s.CourseID = c.CourseID
+      LEFT JOIN Prerequisites p ON c.CourseID = p.CourseID
+      WHERE s.SessionID = ?
+      `,
+      [SessionID]
+    );
+
+    if (prereqRows.length > 0 && prereqRows.some(row => row.PrereqCourseID)) {
+      return res.status(400).json({
+        success: false,
+        message: "Prerequisite not satisfied"
+      });
+    }
+
+    const [countRows] = await db.execute(
+      "SELECT COUNT(*) AS enrolledCount FROM Enrollment WHERE SessionID = ?",
+      [SessionID]
+    );
+
+    const enrolledCount = countRows[0].enrolledCount;
+    const capacity = sessionRows[0].Capacity;
+
+    if (enrolledCount >= capacity) {
+      return res.status(400).json({
+        success: false,
+        message: "Class is full",
+        waitlistAvailable: true
+      });
+    }
+
+    await db.execute(
+      "INSERT INTO Enrollment (StudentID, SessionID) VALUES (?, ?)",
+      [StudentID, SessionID]
+    );
+
+    return res.status(200).json({
       success: true,
       message: "Enrollment successful",
-      enrollmentId: result.insertId
+      data: {
+        StudentID,
+        SessionID
+      }
     });
   } catch (error) {
-    console.error("Enroll error:", error);
+    console.error("Enrollment error:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: "Server error while enrolling student",
       error: error.message
     });
   }
 };
 
-module.exports = {
-  getEnrollments,
-  enrollStudent
-};
+module.exports = { enrollStudent };

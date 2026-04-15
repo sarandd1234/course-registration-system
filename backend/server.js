@@ -21,7 +21,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/eligibility", eligibilityRoutes);
 app.use("/api/enroll", enrollmentRoutes);
-app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/waitlist", waitlistRoutes);
 app.use("/api/drop", dropRoutes);
 app.use("/api/schedule", scheduleRoutes);

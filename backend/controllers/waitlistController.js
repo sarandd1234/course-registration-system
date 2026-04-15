@@ -11,7 +11,6 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
-    // Check if student exists
     const [studentRows] = await db.execute(
       "SELECT StudentID FROM Students WHERE StudentID = ?",
       [StudentID]
@@ -24,7 +23,6 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
-    // Check if session exists
     const [sessionRows] = await db.execute(
       "SELECT SessionID FROM Sessions WHERE SessionID = ?",
       [SessionID]
@@ -37,7 +35,18 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
-    // Check if already on waitlist
+    const [enrollmentRows] = await db.execute(
+      "SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
+      [StudentID, SessionID]
+    );
+
+    if (enrollmentRows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Student is already enrolled in this session"
+      });
+    }
+
     const [existingWaitlist] = await db.execute(
       "SELECT * FROM Waitlist WHERE StudentID = ? AND SessionID = ?",
       [StudentID, SessionID]
@@ -50,7 +59,6 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
-    // Insert into Waitlist table
     await db.execute(
       "INSERT INTO Waitlist (StudentID, SessionID) VALUES (?, ?)",
       [StudentID, SessionID]
@@ -64,7 +72,6 @@ const addToWaitlist = async (req, res) => {
         SessionID
       }
     });
-
   } catch (error) {
     console.error("Waitlist error:", error);
     return res.status(500).json({

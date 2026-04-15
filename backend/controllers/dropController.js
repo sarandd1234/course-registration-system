@@ -11,7 +11,6 @@ const dropCourse = async (req, res) => {
       });
     }
 
-    // Check if enrollment exists
     const [enrollmentRows] = await db.execute(
       "SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
       [StudentID, SessionID]
@@ -24,7 +23,6 @@ const dropCourse = async (req, res) => {
       });
     }
 
-    // Delete from Enrollment
     await db.execute(
       "DELETE FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
       [StudentID, SessionID]
@@ -38,7 +36,6 @@ const dropCourse = async (req, res) => {
         SessionID
       }
     });
-
   } catch (error) {
     console.error("Drop course error:", error);
     return res.status(500).json({
