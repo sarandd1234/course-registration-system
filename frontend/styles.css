@@ -174,5 +174,22 @@ button:hover {
   background: #f1f1f1;
   border-radius: 8px;
   cursor: grab;
-  
+
 }
+/* Styling for Schedule and Roster items */
+.schedule-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+
+#rosterList p {
+  background: #fff;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+
+/*#instructorRosterSection {
+ /* border-left: 4px solid #198754; /* Green for instructor actions */
+/*}
