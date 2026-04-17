@@ -258,6 +258,34 @@ async function loadMyCourses() {
       <p>${course.MeetingTime}</p>
     `;
 
+    async function loadSchedule() {
+      const student = JSON.parse(localStorage.getItem("student"));
+    
+      try {
+        const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
+        const data = await res.json();
+    
+        const container = document.getElementById("schedule");
+        container.innerHTML = "";
+    
+        // Data is the array itself
+        const courses = data.courses || data; 
+    
+        courses.forEach(course => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <p><strong>${course.CourseName}</strong></p>
+            <p>Time: ${course.MeetingTime || "TBD"}</p>
+            <p>Instructor: ${course.InstructorName || "TBA"}</p>
+            <hr/>
+          `;
+          container.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Schedule error:", err);
+      }
+    }
+
     container.appendChild(div);
   });
 }
@@ -300,4 +328,22 @@ async function loadSchedule() {
 
     container.appendChild(div);
   });
+}
+
+async function loadCourseRoster(sessionID) {
+  try {
+    const res = await fetch(`${BASE_URL}/roster?sessionID=${sessionID}`);
+    const students = await res.json();
+
+    const container = document.getElementById("rosterList");
+    container.innerHTML = "<h4>Enrolled Students</h4>";
+
+    students.forEach(s => {
+      const p = document.createElement("p");
+      p.innerText = `${s.FirstName} ${s.LastName} (${s.StudentID})`;
+      container.appendChild(p);
+    });
+  } catch (err) {
+    console.error("Roster load error:", err);
+  }
 }
