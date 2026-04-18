@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const { getSchedule } = require("../controllers/scheduleController");
 
-router.get("/", getSchedule);
+// GET schedule for a specific student
+router.get("/:studentId", getSchedule);
 
 module.exports = router;

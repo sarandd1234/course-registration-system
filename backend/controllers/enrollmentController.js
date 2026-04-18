@@ -24,7 +24,7 @@ const enrollStudent = async (req, res) => {
     }
 
     const [sessionRows] = await db.execute(
-      "SELECT SessionID, Capacity, isActive FROM Sessions WHERE SessionID = ?",
+      "SELECT SessionID, CourseID, Capacity, isActive FROM Sessions WHERE SessionID = ?",
       [SessionID]
     );
 
@@ -35,7 +35,9 @@ const enrollStudent = async (req, res) => {
       });
     }
 
-    if (sessionRows[0].isActive === 0) {
+    const session = sessionRows[0];
+
+    if (session.isActive === 0) {
       return res.status(400).json({
         success: false,
         message: "This session is not active"
@@ -56,20 +58,31 @@ const enrollStudent = async (req, res) => {
 
     const [prereqRows] = await db.execute(
       `
-      SELECT p.PrereqCourseID
-      FROM Sessions s
-      JOIN Courses c ON s.CourseID = c.CourseID
-      LEFT JOIN Prerequisites p ON c.CourseID = p.CourseID
-      WHERE s.SessionID = ?
+      SELECT p.PrereqCourseID, c.CourseName AS PrereqCourseName
+      FROM Prerequisites p
+      JOIN Courses c ON p.PrereqCourseID = c.CourseID
+      WHERE p.CourseID = ?
       `,
-      [SessionID]
+      [session.CourseID]
     );
 
-    if (prereqRows.length > 0 && prereqRows.some(row => row.PrereqCourseID)) {
-      return res.status(400).json({
-        success: false,
-        message: "Prerequisite not satisfied"
-      });
+    for (const prereq of prereqRows) {
+      const [metRows] = await db.execute(
+        `
+        SELECT e.EnrollmentID
+        FROM Enrollment e
+        JOIN Sessions s ON e.SessionID = s.SessionID
+        WHERE e.StudentID = ? AND s.CourseID = ?
+        `,
+        [StudentID, prereq.PrereqCourseID]
+      );
+
+      if (metRows.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Prerequisite not satisfied. Complete ${prereq.PrereqCourseName} first.`
+        });
+      }
     }
 
     const [countRows] = await db.execute(
@@ -78,7 +91,7 @@ const enrollStudent = async (req, res) => {
     );
 
     const enrolledCount = countRows[0].enrolledCount;
-    const capacity = sessionRows[0].Capacity;
+    const capacity = session.Capacity;
 
     if (enrolledCount >= capacity) {
       return res.status(400).json({
@@ -96,10 +109,7 @@ const enrollStudent = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Enrollment successful",
-      data: {
-        StudentID,
-        SessionID
-      }
+      data: { StudentID, SessionID }
     });
   } catch (error) {
     console.error("Enrollment error:", error);

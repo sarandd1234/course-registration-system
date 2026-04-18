@@ -1,45 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Course Registration System</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-
 <div class="page">
-  <h2>Dashboard</h2>
-
-  <div class="widget">
-    <h3>My Courses</h3>
-    <div id="myCourses"></div>
+  <div class="page-header">
+    <h2>Dashboard</h2>
+    <p class="page-subtitle">View your registration, waitlist status, and course details.</p>
   </div>
 
-  <div class="widget">
-    <h3>Notifications</h3>
-    <div id="notifications"></div>
-  </div>
+  <div class="dashboard-layout">
+    <div class="dashboard-main">
+      <div class="widget">
+        <div class="widget-header">
+          <h3>My Courses</h3>
+        </div>
+        <div id="myCourses">
+          <p>No enrolled courses yet.</p>
+        </div>
+      </div>
 
-  <div class="widget">
-    <h3>Schedule</h3>
-    <div id="schedule"></div>
-  </div>
+      <div class="widget">
+        <div class="widget-header">
+          <h3>Schedule</h3>
+          <button class="secondary-btn" onclick="downloadSchedulePDF()">Download PDF</button>
+        </div>
+        <div id="schedule">
+          <p>No schedule available yet.</p>
+        </div>
+      </div>
 
-  <div class="widget">
-    <h3>Course Roster</h3>
-    <div id="rosterList">
-      <p>Select a course to view roster...</p>
+      <div class="widget">
+        <div class="widget-header">
+          <h3>My Waitlist</h3>
+        </div>
+        <div id="myWaitlist">
+          <p>No waitlisted courses yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-sidebar">
+      <div class="widget compact-widget">
+        <div class="widget-header">
+          <h3>Notifications</h3>
+        </div>
+        <div id="notifications">
+          <p>No new notifications.</p>
+        </div>
+      </div>
+
+      <div class="widget compact-widget">
+        <div class="widget-header">
+          <h3>Course Roster</h3>
+        </div>
+        <div id="rosterList">
+          <p>Select <strong>View Roster</strong> from one of your enrolled courses.</p>
+        </div>
+      </div>
+
+      <div class="widget compact-widget">
+        <div class="widget-header">
+          <h3>Selected Waitlist</h3>
+        </div>
+        <div id="waitlistList">
+          <p>Select <strong>View Waitlist</strong> from one of your waitlisted courses.</p>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="widget">
-    <h3>Waitlist</h3>
-    <div id="waitlistList">
-      <p>Select a course to view waitlist...</p>
-    </div>
-  </div>
-
 </div>
-
-<script src="app.js"></script>
-</body>
-</html>

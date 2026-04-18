@@ -2,10 +2,10 @@ const db = require("../db");
 
 const getCourses = async (req, res) => {
   try {
-    const { department, courseNumber, instructor } = req.query;
+    const { department, courseNumber, instructor, courseName } = req.query;
 
     let query = `
-      SELECT 
+      SELECT
         c.CourseID,
         c.CourseNumber,
         c.CourseName,
@@ -24,14 +24,14 @@ const getCourses = async (req, res) => {
       JOIN Sessions s ON c.CourseID = s.CourseID
       LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
       LEFT JOIN Enrollment e ON s.SessionID = e.SessionID
-      WHERE s.isActive = 1
+      WHERE 1=1
     `;
 
     const params = [];
 
     if (department) {
-      query += ` AND d.DepartmentName LIKE ?`;
-      params.push(`%${department}%`);
+      query += ` AND (d.DepartmentName LIKE ? OR c.DepartmentID LIKE ?)`;
+      params.push(`%${department}%`, `%${department}%`);
     }
 
     if (courseNumber) {
@@ -42,6 +42,11 @@ const getCourses = async (req, res) => {
     if (instructor) {
       query += ` AND i.InstructorName LIKE ?`;
       params.push(`%${instructor}%`);
+    }
+
+    if (courseName) {
+      query += ` AND c.CourseName LIKE ?`;
+      params.push(`%${courseName}%`);
     }
 
     query += `
@@ -57,22 +62,16 @@ const getCourses = async (req, res) => {
         s.Capacity,
         s.isActive,
         i.InstructorName
-      ORDER BY c.CourseNumber, s.SectionNumber
+      ORDER BY c.CourseName ASC, s.SectionNumber ASC
     `;
 
     const [rows] = await db.execute(query, params);
-
-    return res.status(200).json({
-      success: true,
-      message: "Courses retrieved successfully",
-      data: rows
-    });
+    res.json(rows);
   } catch (error) {
-    console.error("Courses error:", error);
-    return res.status(500).json({
+    console.error("Course fetch error:", error);
+    res.status(500).json({
       success: false,
-      message: "Server error while retrieving courses",
-      error: error.message
+      message: "Failed to load courses"
     });
   }
 };

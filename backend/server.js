@@ -9,6 +9,7 @@ const enrollmentRoutes = require("./routes/enrollmentRoutes");
 const waitlistRoutes = require("./routes/waitlistRoutes");
 const dropRoutes = require("./routes/dropRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
+const rosterRoutes = require("./routes/rosterRoutes");
 const db = require("./db");
 
 const app = express();
@@ -24,6 +25,7 @@ app.use("/api/enroll", enrollmentRoutes);
 app.use("/api/waitlist", waitlistRoutes);
 app.use("/api/drop", dropRoutes);
 app.use("/api/schedule", scheduleRoutes);
+app.use("/api/roster", rosterRoutes);
 
 // Home Route
 app.get("/", (req, res) => {

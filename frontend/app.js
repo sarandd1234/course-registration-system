@@ -5,22 +5,24 @@ async function loadPage(page) {
   const html = await res.text();
   document.getElementById("app").innerHTML = html;
 
-  if (page === "dashboard.html") {
-    loadDashboard();
+  if (page === "courses.html") {
+    await loadCourseFilters();
+    await searchCourses();
   }
 
-  if (page === "courses.html") {
+  if (page === "dashboard.html") {
+    await loadDashboard();
   }
 }
 
-window.onload = () => {
+window.onload = async () => {
   const student = JSON.parse(localStorage.getItem("student"));
 
   if (student) {
     showAuthenticatedUI(student);
-    loadPage("courses.html");
+    await loadPage("courses.html");
   } else {
-    loadPage("login.html");
+    await loadPage("login.html");
   }
 };
 
@@ -28,13 +30,15 @@ function showAuthenticatedUI(student) {
   const nav = document.getElementById("navBar");
   const userInfo = document.getElementById("userInfo");
 
-  nav.style.display = "flex";
-  userInfo.innerText = `Hi, ${student.FirstName} ${student.LastName} (${student.StudentID})`;
+  if (nav) nav.style.display = "flex";
+  if (userInfo) {
+    userInfo.innerText = `Hi, ${student.FirstName} ${student.LastName} (${student.StudentID})`;
+  }
 }
 
 async function handleLogin() {
-  const studentID = document.getElementById("studentID").value;
-  const password = document.getElementById("password").value;
+  const studentID = document.getElementById("studentID").value.trim();
+  const password = document.getElementById("password").value.trim();
   const message = document.getElementById("loginMessage");
 
   try {
@@ -51,325 +55,261 @@ async function handleLogin() {
 
     const data = await response.json();
 
-    console.log("Login Response:", data);
-
     if (response.ok && data.success) {
-      message.innerText = "Login successful!";
-      message.style.color = "green";
-
       localStorage.setItem("student", JSON.stringify(data.student));
+      localStorage.removeItem("notifications");
 
       showAuthenticatedUI(data.student);
 
-      loadPage("courses.html");
+      message.innerText = "Login successful!";
+      message.style.color = "green";
+
+      await loadPage("courses.html");
     } else {
       message.innerText = data.message || "Invalid credentials";
       message.style.color = "red";
     }
-
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
     message.innerText = "Error connecting to server";
+    message.style.color = "red";
   }
 }
 
 function logout() {
   localStorage.removeItem("student");
-  document.getElementById("navBar").style.display = "none";
+  localStorage.removeItem("notifications");
+
+  const nav = document.getElementById("navBar");
+  const userInfo = document.getElementById("userInfo");
+
+  if (nav) nav.style.display = "none";
+  if (userInfo) userInfo.innerText = "";
+
   loadPage("login.html");
 }
 
 function recoverPassword() {
-  alert("Password recovery coming soon");
+  alert("Password recovery coming soon.");
 }
 
-async function searchCourses() {
-  const semester = document.getElementById("semester")?.value;
-  const department = document.getElementById("department").value;
-  const courseNumber = document.getElementById("courseNumber").value;
-  const instructor = document.getElementById("instructor").value;
+function showConfirmation(message, isSuccess = true) {
+  let popup = document.getElementById("popup");
 
-  let query = "";
-
-  if (department) query += `?department=${department}`;
-  else query += "?";
-
-  if (semester) query += `&semester=${semester}`;
-  if (courseNumber) query += `&courseNumber=${courseNumber}`;
-  if (instructor) query += `&instructor=${instructor}`;
-
-  try {
-    const response = await fetch(`${BASE_URL}/courses${query}`);
-    const data = await response.json();
-
-    console.log("Courses:", data);
-    console.log("Search URL:", `${BASE_URL}/courses${query}`);
-
-    const courses =
-    Array.isArray(data)
-      ? data
-      : data.courses
-      ? data.courses
-      : data.data
-      ? data.data
-      : data.enrollments   // 🔥 ADD THIS
-      ? data.enrollments
-      : [];
-    const filteredCourses = courses.filter(course => {
-      if (course.isActive === false) return false;
-      if (course.seatsAvailable !== undefined && course.seatsAvailable <= 0) return false;
-      return true;
-    });
-
-    displayCourses(filteredCourses);
-
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-function displayCourses(courses) {
-  const resultsDiv = document.getElementById("results");
-
-  resultsDiv.innerHTML = "";
-
-  if (!courses || courses.length === 0) {
-    resultsDiv.innerHTML = "<p>No courses found</p>";
-    return;
+  if (!popup) {
+    popup = document.createElement("div");
+    popup.id = "popup";
+    popup.className = "popup";
+    document.body.appendChild(popup);
   }
 
-  courses.forEach(course => {
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <p>Course: ${course.CourseName}</p>
-      <p>Department: ${course.DepartmentName || "TBA"}</p>
-      <p>Instructor: ${course.InstructorName || "TBA"}</p>
-      <p>Section: ${course.SectionNumber || "TBA"}</p>
-      <p>Time: ${course.MeetingTime || "TBA"}</p>
-      <p>Credits: ${course.Credits || "TBA"}</p>
-      <p>Seats: ${course.seatsAvailable ?? "TBA"}</p>
-      <p>Status: ${course.isActive ? "Active" : "Inactive"}</p>
-      ${course.isActive !== false
-        ? `<button onclick="enroll('${course.SessionID}')">Enroll</button>`
-        : ""
-      }
-      <button onclick="joinWaitlist('${course.SessionID}')">Join Waitlist</button>
-      <hr/>
-    `;
-
-    resultsDiv.appendChild(div);
-  });
-}
-async function enroll(sessionID) {
-  const student = JSON.parse(localStorage.getItem("student"));
-
-  try {
-    const res = await fetch(`${BASE_URL}/enroll`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        StudentID: student.StudentID,
-        SessionID: sessionID
-      })
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      showConfirmation("Enrolled successfully!");
-      addNotification("Successfully enrolled!");
-    
-      loadMyCourses();
-      loadSchedule();
-    
-      loadPage("dashboard.html");
-    } else {
-      showConfirmation(data.message || "Enrollment failed");
-    }
-
-  } catch (err) {
-    console.error(err);
-    showConfirmation("Server error during enrollment");
-  }
-}
-async function joinWaitlist(sessionID) {
-  const student = JSON.parse(localStorage.getItem("student"));
-  const container = document.getElementById("waitlistList");
-  try {
-    const res = await fetch(`${BASE_URL}/waitlist`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        StudentID: student.StudentID,
-        SessionID: sessionID
-      })
-    });
-
-    const data = await res.json();
-
-    if (data?.success) {
-      showConfirmation("Added to waitlist!");
-    } else {
-      showConfirmation("Waitlist submitted (pending backend processing)");
-    }
-
-  } catch (err) {
-    console.warn("Waitlist backend not ready, using fallback UI");
-
-    showConfirmation("Added to waitlist (temporary mode)");
-  }
-}
-
-function showConfirmation(message) {
-  const popup = document.getElementById("popup");
+  popup.className = isSuccess ? "popup success" : "popup error";
   popup.innerText = message;
   popup.style.display = "block";
 
   setTimeout(() => {
     popup.style.display = "none";
-  }, 3000);
+  }, 2800);
 }
-function enableDrag() {
-  const widgets = document.querySelectorAll(".widget");
-  if (!widgets.length) return;
 
-  widgets.forEach(w => {
-    w.draggable = true;
+function addNotification(message) {
+  let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+  notifications.push(message);
 
-    w.addEventListener("dragstart", e => {
-      e.dataTransfer.setData("text/plain", e.target.innerHTML);
-    });
+  if (notifications.length > 5) {
+    notifications = notifications.slice(-5);
+  }
 
-    w.addEventListener("drop", e => {
-      e.preventDefault();
-      e.target.innerHTML = e.dataTransfer.getData("text/plain");
-    });
+  localStorage.setItem("notifications", JSON.stringify(notifications));
+}
 
-    w.addEventListener("dragover", e => e.preventDefault());
+function loadNotifications() {
+  const container = document.getElementById("notifications");
+  if (!container) return;
+
+  const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+
+  if (notifications.length === 0) {
+    container.innerHTML = "<p>No new notifications.</p>";
+    return;
+  }
+
+  container.innerHTML = "";
+  notifications.slice().reverse().forEach(note => {
+    const item = document.createElement("div");
+    item.className = "notification-item";
+    item.innerText = note;
+    container.appendChild(item);
   });
 }
 
-async function loadDashboard() {
-  loadMyCourses();
-  loadNotifications();
-  loadSchedule();
-}
-async function loadMyCourses() {
-  const student = JSON.parse(localStorage.getItem("student"));
-
+async function loadCourseFilters() {
   try {
-    const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-    const data = await res.json();
+    const res = await fetch(`${BASE_URL}/courses`);
+    const courses = await res.json();
 
-    const courses =
-    Array.isArray(data)
-      ? data
-      : data.courses
-      ? data.courses
-      : data.data
-      ? data.data
-      : data.enrollments   // 🔥 ADD THIS
-      ? data.enrollments
-      : [];
-    const container = document.getElementById("myCourses");
-    container.innerHTML = "";
+    const titleList = document.getElementById("courseTitleList");
+    const numberList = document.getElementById("courseNumberList");
+    const instructorList = document.getElementById("instructorList");
+    const departmentList = document.getElementById("departmentList");
 
-    courses.forEach(course => {
-      const div = document.createElement("div");
+    if (!titleList || !numberList || !instructorList || !departmentList) return;
 
-      div.innerHTML = `
-  <p><strong>${course.CourseName}</strong></p>
-  <p>${course.InstructorName || "TBA"}</p>
-  <p>${course.SectionNumber || "TBA"}</p>
-  <p>${course.MeetingTime || "TBA"}</p>
+    titleList.innerHTML = "";
+    numberList.innerHTML = "";
+    instructorList.innerHTML = "";
+    departmentList.innerHTML = "";
 
-  <button onclick="dropCourse('${course.SessionID}')">Drop</button>
+    const titles = [...new Set(courses.map(c => c.CourseName).filter(Boolean))];
+    const numbers = [...new Set(courses.map(c => c.CourseNumber).filter(Boolean))];
+    const instructors = [...new Set(courses.map(c => c.InstructorName).filter(Boolean))];
+    const departments = [...new Set(courses.map(c => c.DepartmentName).filter(Boolean))];
 
-  <button onclick="loadCourseRoster('${course.SessionID}')">
-    View Roster
-  </button>
-  <button onclick="loadWaitlist('${course.SessionID}')">
-  View Waitlist
-</button>
-`;
-
-      container.appendChild(div);
+    titles.forEach(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      titleList.appendChild(option);
     });
 
-  } catch (err) {
-    console.error("Dashboard error:", err);
+    numbers.forEach(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      numberList.appendChild(option);
+    });
+
+    instructors.forEach(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      instructorList.appendChild(option);
+    });
+
+    departments.forEach(value => {
+      const option = document.createElement("option");
+      option.value = value;
+      departmentList.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Filter load error:", error);
   }
 }
 
-async function loadSchedule() {
-  const student = JSON.parse(localStorage.getItem("student"));
+async function searchCourses() {
+  const courseName = document.getElementById("courseName")?.value || "";
+  const courseNumber = document.getElementById("courseNumber")?.value || "";
+  const instructor = document.getElementById("instructor")?.value || "";
+  const department = document.getElementById("department")?.value || "";
+
+  const params = new URLSearchParams();
+
+  if (courseName) params.append("courseName", courseName);
+  if (courseNumber) params.append("courseNumber", courseNumber);
+  if (instructor) params.append("instructor", instructor);
+  if (department) params.append("department", department);
 
   try {
-    const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-    const data = await res.json();
+    const response = await fetch(`${BASE_URL}/courses?${params.toString()}`);
+    const data = await response.json();
 
-    const courses =
-    Array.isArray(data)
-      ? data
-      : data.courses
-      ? data.courses
-      : data.data
-      ? data.data
-      : data.enrollments   // 🔥 ADD THIS
-      ? data.enrollments
-      : [];
-    const container = document.getElementById("schedule");
-    container.innerHTML = "";
-
-    courses.forEach(course => {
-      const div = document.createElement("div");
-      div.classList.add("schedule-item");
-
-      div.innerHTML = `
-        <p><strong>${course.CourseName}</strong></p>
-        <p>Time: ${course.MeetingTime || "TBD"}</p>
-      `;
-
-      container.appendChild(div);
-    });
-
-  } catch (err) {
-    console.error("Schedule error:", err);
+    const courses = Array.isArray(data) ? data : [];
+    await displayCourses(courses);
+  } catch (error) {
+    console.error("Course search error:", error);
+    showConfirmation("Failed to load courses", false);
   }
 }
 
-async function loadCourseRoster(sessionID) {
-  try {
-    const res = await fetch(`${BASE_URL}/roster?sessionID=${sessionID}`);
-    const students = await res.json();
+async function displayCourses(courses) {
+  const tbody = document.getElementById("courseTableBody");
+  if (!tbody) return;
 
-    const container = document.getElementById("rosterList");
-    container.innerHTML = "<h4>Course Roster</h4>";
+  tbody.innerHTML = "";
 
-    students.forEach(s => {
-      const p = document.createElement("p");
-      p.innerText = `${s.FirstName} ${s.LastName} (${s.StudentID})`;
-      container.appendChild(p);
-    });
-
-  } catch (err) {
-    console.error("Roster load error:", err);
-  }
-}
-async function dropCourse(sessionID) {
   const student = JSON.parse(localStorage.getItem("student"));
+  let enrolledSessionIds = [];
+  let waitlistedSessionIds = [];
 
   try {
-    const res = await fetch(`${BASE_URL}/drop`, {
+    if (student) {
+      const scheduleRes = await fetch(`${BASE_URL}/schedule/${student.StudentID}`);
+      const scheduleData = await scheduleRes.json();
+      const enrolledCourses = Array.isArray(scheduleData) ? scheduleData : scheduleData.data || [];
+      enrolledSessionIds = enrolledCourses.map(course => String(course.SessionID));
+
+      const waitlistRes = await fetch(`${BASE_URL}/waitlist/student/${student.StudentID}`);
+      const waitlistData = await waitlistRes.json();
+      waitlistedSessionIds = Array.isArray(waitlistData)
+        ? waitlistData.map(item => String(item.SessionID))
+        : [];
+    }
+  } catch (error) {
+    console.error("Status preload error:", error);
+  }
+
+  if (!courses.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5">No courses found.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  courses.forEach(course => {
+    const tr = document.createElement("tr");
+
+    const isActive = course.isActive === 1 || course.isActive === true;
+    const seatsAvailable = Number(course.seatsAvailable ?? 0);
+    const sessionId = String(course.SessionID);
+
+    let statusLabel = "";
+    let statusClass = "";
+    let actionHtml = "";
+
+    if (enrolledSessionIds.includes(sessionId)) {
+      statusLabel = "Enrolled";
+      statusClass = "badge enrolled";
+      actionHtml = `<button class="secondary-btn" disabled>Enrolled</button>`;
+    } else if (waitlistedSessionIds.includes(sessionId)) {
+      statusLabel = "Waitlisted";
+      statusClass = "badge waitlist";
+      actionHtml = `<button class="secondary-btn" onclick="loadPage('dashboard.html')">View Status</button>`;
+    } else if (!isActive) {
+      statusLabel = "Inactive";
+      statusClass = "badge inactive";
+      actionHtml = `<button class="secondary-btn" disabled>Inactive</button>`;
+    } else if (seatsAvailable <= 0) {
+      statusLabel = "Full";
+      statusClass = "badge full";
+      actionHtml = `<button onclick="joinWaitlist('${course.SessionID}', '${course.CourseName}')">Waitlist</button>`;
+    } else {
+      statusLabel = `${seatsAvailable} open`;
+      statusClass = "badge open";
+      actionHtml = `<button onclick="enroll('${course.SessionID}', '${course.CourseName}')">Enroll</button>`;
+    }
+
+    tr.innerHTML = `
+      <td>
+        <div class="table-title">${course.CourseName}</div>
+        <div class="table-subtitle">${course.DepartmentName || ""} ${course.CourseNumber || ""} · Section ${course.SectionNumber || "TBA"}</div>
+      </td>
+      <td>${course.InstructorName || "TBA"}</td>
+      <td>${course.MeetingTime || "TBA"}</td>
+      <td><span class="${statusClass}">${statusLabel}</span></td>
+      <td>${actionHtml}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+async function enroll(sessionID, courseName) {
+  const student = JSON.parse(localStorage.getItem("student"));
+  if (!student) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/enroll`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         StudentID: student.StudentID,
         SessionID: sessionID
@@ -379,33 +319,257 @@ async function dropCourse(sessionID) {
     const data = await res.json();
 
     if (data.success) {
-      showConfirmation("Course dropped!");
-      loadMyCourses();
-      loadSchedule();
+      addNotification(`Enrolled in ${courseName}`);
+      showConfirmation(data.message || `Enrolled in ${courseName}`, true);
+      await loadPage("dashboard.html");
     } else {
-      showConfirmation(data.message || "Drop failed");
+      showConfirmation(data.message || "Enrollment failed", false);
+      await searchCourses();
     }
-
   } catch (err) {
-    console.error(err);
-    showConfirmation("Server error while dropping course");
+    console.error("Enroll error:", err);
+    showConfirmation("Server error during enrollment", false);
   }
 }
-async function loadWaitlist(sessionID) {
+
+async function joinWaitlist(sessionID, courseName) {
+  const student = JSON.parse(localStorage.getItem("student"));
+  if (!student) return;
+
   try {
-    const res = await fetch(`${BASE_URL}/waitlist?sessionID=${sessionID}`);
-    const students = await res.json();
-
-    const container = document.getElementById("rosterList");
-    container.innerHTML = "<h4>Waitlist (FIFO)</h4>";
-
-    students.forEach(s => {
-      const p = document.createElement("p");
-      p.innerText = `${s.FirstName} ${s.LastName} (${s.StudentID})`;
-      container.appendChild(p);
+    const res = await fetch(`${BASE_URL}/waitlist`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        StudentID: student.StudentID,
+        SessionID: sessionID
+      })
     });
 
+    const data = await res.json();
+
+    if (data.success) {
+      addNotification(`Added to waitlist for ${courseName}`);
+      showConfirmation(data.message || `Added to waitlist for ${courseName}`, true);
+      await loadPage("dashboard.html");
+    } else {
+      showConfirmation(data.message || "Waitlist failed", false);
+      await searchCourses();
+    }
+  } catch (err) {
+    console.error("Waitlist error:", err);
+    showConfirmation("Server error during waitlist", false);
+  }
+}
+
+async function loadDashboard() {
+  loadNotifications();
+  await loadMyCourses();
+  await loadSchedule();
+  await loadMyWaitlist();
+}
+
+async function loadMyCourses() {
+  const student = JSON.parse(localStorage.getItem("student"));
+  const container = document.getElementById("myCourses");
+  if (!student || !container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/schedule/${student.StudentID}`);
+    const data = await res.json();
+    const courses = Array.isArray(data) ? data : data.data || [];
+
+    container.innerHTML = "";
+
+    if (!courses.length) {
+      container.innerHTML = "<p>No enrolled courses yet.</p>";
+      return;
+    }
+
+    courses.forEach(course => {
+      const div = document.createElement("div");
+      div.className = "dashboard-item";
+      div.innerHTML = `
+        <div class="item-title">${course.CourseName}</div>
+        <div class="item-meta">${course.DepartmentName || ""} ${course.CourseNumber || ""} · Section ${course.SectionNumber || "TBA"}</div>
+        <div class="item-meta">${course.InstructorName || "TBA"} · ${course.MeetingTime || "TBA"}</div>
+        <div class="item-actions">
+          <button onclick="dropCourse('${course.SessionID}', '${course.CourseName}')">Drop</button>
+          <button class="secondary-btn" onclick="loadCourseRoster('${course.SessionID}')">View Roster</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("My Courses error:", err);
+    container.innerHTML = "<p>Unable to load enrolled courses.</p>";
+  }
+}
+
+async function loadSchedule() {
+  const student = JSON.parse(localStorage.getItem("student"));
+  const container = document.getElementById("schedule");
+  if (!student || !container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/schedule/${student.StudentID}`);
+    const data = await res.json();
+    const courses = Array.isArray(data) ? data : data.data || [];
+
+    container.innerHTML = "";
+
+    if (!courses.length) {
+      container.innerHTML = "<p>No schedule available yet.</p>";
+      return;
+    }
+
+    courses.forEach(course => {
+      const div = document.createElement("div");
+      div.className = "schedule-row";
+      div.innerHTML = `
+        <span class="schedule-course">${course.CourseName}</span>
+        <span class="schedule-time">${course.MeetingTime || "TBA"}</span>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Schedule error:", err);
+    container.innerHTML = "<p>Unable to load schedule.</p>";
+  }
+}
+
+async function loadMyWaitlist() {
+  const student = JSON.parse(localStorage.getItem("student"));
+  const container = document.getElementById("myWaitlist");
+  if (!student || !container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/waitlist/student/${student.StudentID}`);
+    const rows = await res.json();
+
+    container.innerHTML = "";
+
+    if (!rows.length) {
+      container.innerHTML = "<p>No waitlisted courses yet.</p>";
+      return;
+    }
+
+    rows.forEach(item => {
+      const displayPosition = Number(item.Position) + 1;
+
+      const div = document.createElement("div");
+      div.className = "dashboard-item";
+      div.innerHTML = `
+        <div class="item-title">${item.CourseName}</div>
+        <div class="item-meta">Section ${item.SectionNumber || "TBA"} · ${item.MeetingTime || "TBA"}</div>
+        <div class="item-meta">${item.InstructorName || "TBA"}</div>
+        <div class="waitlist-position">Waitlist Position: ${displayPosition}</div>
+        <div class="item-actions">
+          <button class="secondary-btn" onclick="loadSessionWaitlist('${item.SessionID}')">View Waitlist</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("My waitlist error:", err);
+    container.innerHTML = "<p>Unable to load waitlisted courses.</p>";
+  }
+}
+
+async function loadCourseRoster(sessionID) {
+  const container = document.getElementById("rosterList");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/roster/${sessionID}`);
+
+    if (!res.ok) {
+      container.innerHTML = "<p>Unable to load roster.</p>";
+      return;
+    }
+
+    const students = await res.json();
+    container.innerHTML = "<div class='panel-title'>Course Roster</div>";
+
+    if (!students.length) {
+      container.innerHTML += "<p>No students enrolled in this session.</p>";
+      return;
+    }
+
+    students.forEach(student => {
+      const row = document.createElement("div");
+      row.className = "mini-row";
+      row.innerText = `${student.FirstName} ${student.LastName} (${student.StudentID})`;
+      container.appendChild(row);
+    });
+  } catch (err) {
+    console.error("Roster load error:", err);
+    container.innerHTML = "<p>Unable to load roster.</p>";
+  }
+}
+
+async function loadSessionWaitlist(sessionID) {
+  const container = document.getElementById("waitlistList");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/waitlist/session/${sessionID}`);
+
+    if (!res.ok) {
+      container.innerHTML = "<p>Unable to load waitlist.</p>";
+      return;
+    }
+
+    const rows = await res.json();
+    container.innerHTML = "<div class='panel-title'>Session Waitlist</div>";
+
+    if (!rows.length) {
+      container.innerHTML += "<p>No students on the waitlist for this session.</p>";
+      return;
+    }
+
+    rows.forEach(student => {
+      const displayPosition = Number(student.Position) + 1;
+      const row = document.createElement("div");
+      row.className = "mini-row";
+      row.innerText = `#${displayPosition} - ${student.FirstName} ${student.LastName} (${student.StudentID})`;
+      container.appendChild(row);
+    });
   } catch (err) {
     console.error("Waitlist load error:", err);
+    container.innerHTML = "<p>Unable to load waitlist.</p>";
   }
+}
+
+async function dropCourse(sessionID, courseName) {
+  const student = JSON.parse(localStorage.getItem("student"));
+  if (!student) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/drop`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        StudentID: student.StudentID,
+        SessionID: sessionID
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      addNotification(`Dropped ${courseName}`);
+      showConfirmation(data.message || `Dropped ${courseName}`, true);
+      await loadDashboard();
+    } else {
+      showConfirmation(data.message || "Drop failed", false);
+    }
+  } catch (err) {
+    console.error("Drop error:", err);
+    showConfirmation("Server error while dropping course", false);
+  }
+}
+
+function downloadSchedulePDF() {
+  showConfirmation("PDF download coming soon", true);
 }

@@ -1,24 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Course Registration System</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="page">
-    <h2>Search Courses</h2>
-  
-    <div class="search-card">
-      <input type="text" id="department" placeholder="Department (e.g. INFO)" />
-      <input type="text" id="courseNumber" placeholder="Course Number" />
-      <input type="text" id="instructor" placeholder="Instructor" />
-  
-      <button onclick="searchCourses()">Search</button>
-    </div>
-  
-    <div id="results"></div>
+<div class="page">
+  <div class="page-header">
+    <h2>Registration</h2>
+    <p class="page-subtitle">Search and register for available course sections.</p>
   </div>
 
-<script src="app.js"></script>
-</body>
-</html>
+  <div class="search-panel">
+    <div class="search-grid">
+      <input list="courseTitleList" id="courseName" placeholder="Course Title" />
+      <datalist id="courseTitleList"></datalist>
+
+      <input list="courseNumberList" id="courseNumber" placeholder="Course Number" />
+      <datalist id="courseNumberList"></datalist>
+
+      <input list="instructorList" id="instructor" placeholder="Instructor" />
+      <datalist id="instructorList"></datalist>
+
+      <input list="departmentList" id="department" placeholder="Department" />
+      <datalist id="departmentList"></datalist>
+
+      <button onclick="searchCourses()">Search</button>
+    </div>
+  </div>
+
+  <div class="table-panel">
+    <table class="course-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Instructor</th>
+          <th>Meeting Time</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="courseTableBody">
+        <tr>
+          <td colspan="5">Loading courses...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

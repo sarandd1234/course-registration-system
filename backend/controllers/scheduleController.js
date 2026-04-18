@@ -2,7 +2,7 @@ const db = require("../db");
 
 const getSchedule = async (req, res) => {
   try {
-    const { studentId } = req.query;
+    const { studentId } = req.params;
 
     if (!studentId) {
       return res.status(400).json({
@@ -11,7 +11,8 @@ const getSchedule = async (req, res) => {
       });
     }
 
-    const [rows] = await db.execute(`
+    const [rows] = await db.execute(
+      `
       SELECT 
         e.StudentID,
         s.SessionID,
@@ -27,10 +28,12 @@ const getSchedule = async (req, res) => {
       JOIN Sessions s ON e.SessionID = s.SessionID
       JOIN Courses c ON s.CourseID = c.CourseID
       JOIN Departments d ON c.DepartmentID = d.DepartmentID
-      JOIN Instructors i ON s.InstructorID = i.InstructorID
+      LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
       WHERE e.StudentID = ?
       ORDER BY c.CourseNumber, s.SectionNumber
-    `, [studentId]);
+      `,
+      [studentId]
+    );
 
     return res.status(200).json({
       success: true,
