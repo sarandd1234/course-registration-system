@@ -1,195 +1,243 @@
+/* GLOBAL */
 body {
-  min-height: 100vh;
-  justify-content: flex-start; 
-  align-items: center; 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f4f6f8;
   color: #333;
   margin: 0;
   padding: 0;
 }
-.page {
-  max-width: 400px;      
-  margin: 40px auto;     
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.page input,
-.page button {
-  width: 100%;
-  padding: 12px 14px;
-  margin: 12px 0;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 16px;
-  box-sizing: border-box; 
-}
 
-.page button {
-  background-color: #0d6efd;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.page button:hover {
-  background-color: #0b5ed7;
-}
-h1, h2 {
-  color: #1a1a1a;
-}
-
+/* HEADER / NAV */
 header {
   background-color: #0d6efd;
   color: #fff;
-  padding: 20px 40px;
+  padding: 16px 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  flex-wrap: wrap;
 }
 
 header h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 nav button {
   background-color: #fff;
   color: #0d6efd;
   border: none;
-  padding: 10px 18px;
-  margin-left: 10px;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
 }
 
 nav button:hover {
   background-color: #e2e6ea;
 }
 
+/* MAIN PAGE CONTAINER (WIDER) */
 .page {
-  max-width: 500px;
-  margin: 40px auto;
-  padding: 30px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  max-width: 1200px;   /* 🔥 BIG CHANGE */
+  margin: 30px auto;
+  padding: 20px;
 }
 
+/* INPUTS + BUTTONS */
 input {
-  width: 100%;
-  padding: 12px 14px;
-  margin: 12px 0;
+  padding: 10px 12px;
+  margin: 8px 6px 8px 0;
   border: 1px solid #ccc;
   border-radius: 6px;
-  font-size: 16px;
-  transition: border-color 0.2s;
-}
-
-input:focus {
-  border-color: #0d6efd;
-  outline: none;
-  box-shadow: 0 0 5px rgba(13,110,253,0.3);
+  font-size: 14px;
 }
 
 button {
   background-color: #0d6efd;
   color: #fff;
   border: none;
-  padding: 12px 20px;
-  margin-top: 10px;
-  font-size: 16px;
+  padding: 10px 16px;
+  margin-top: 8px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
 button:hover {
   background-color: #0b5ed7;
 }
 
-#loginMessage {
-  margin-top: 10px;
-  font-weight: 600;
+/* SEARCH BAR ROW */
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
+/* COURSE RESULTS GRID */
 #results {
-  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* 🔥 GRID */
+  gap: 16px;
 }
 
+/* COURSE CARD */
 #results div {
-  padding: 14px 18px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 12px;
+  background-color: #fff;
+  padding: 16px;
+  border-radius: 10px;
   border-left: 4px solid #0d6efd;
-  transition: background-color 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: transform 0.15s ease;
 }
 
 #results div:hover {
-  background-color: #e9ecef;
+  transform: translateY(-3px);
 }
 
 #results p {
   margin: 4px 0;
 }
 
-@media (max-width: 600px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  nav button {
-    margin: 6px 0 0 0;
-  }
-
-  .page {
-    margin: 20px;
-    padding: 20px;
-  }
+/* DASHBOARD LAYOUT */
+#widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 🔥 responsive */
+  gap: 16px;
 }
+
+/* DASHBOARD WIDGET */
+.widget {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* SCHEDULE ITEMS */
+.schedule-item {
+  border-bottom: 1px solid #eee;
+  padding: 8px 0;
+}
+
+/* POPUP */
 .popup {
   position: fixed;
   top: 20px;
   right: 20px;
   background: #198754;
   color: white;
-  padding: 15px 20px;
+  padding: 12px 18px;
   border-radius: 8px;
 }
-#widgets {
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  .page {
+    padding: 15px;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav {
+    margin-top: 10px;
+  }
+}
+/* SEARCH BOX (bring back that "card" feel) */
+.search-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
-.widget {
-  padding: 20px;
-  background: #f1f1f1;
+.search-card input {
+  flex: 1;
+  min-width: 150px;
+}
+
+.search-card button {
+  flex: 0 0 auto;
+}
+/* FULL SCREEN LOGIN BACKGROUND */
+.login-page {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f6f8;
+}
+
+/* LOGIN BOX */
+.login-box {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* INPUTS INSIDE LOGIN ONLY */
+.login-box input {
+  padding: 12px;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  cursor: grab;
-
-}
-/* Styling for Schedule and Roster items */
-.schedule-item {
-  border-bottom: 1px solid #eee;
-  padding: 8px 0;
+  font-size: 15px;
+  transition: 0.2s;
 }
 
-#rosterList p {
-  background: #fff;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 5px;
+.login-box input:focus {
+  border-color: #0d6efd;
+  outline: none;
+  box-shadow: 0 0 5px rgba(13,110,253,0.3);
 }
 
-/*#instructorRosterSection {
- /* border-left: 4px solid #198754; /* Green for instructor actions */
-/*}
+/* BUTTON */
+.login-box button {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.login-box button:hover {
+  background-color: #0b5ed7;
+}
+
+/* FORGOT PASSWORD */
+.forgot {
+  text-align: center;
+  font-size: 13px;
+  color: #0d6efd;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+/* LOGIN MESSAGE */
+#loginMessage {
+  text-align: center;
+  font-weight: 500;
+}
