@@ -5,6 +5,12 @@ async function loadPage(page) {
   const html = await res.text();
   document.getElementById("app").innerHTML = html;
 
+  if (page === "dashboard.html") {
+    loadDashboard();
+  }
+
+  if (page === "courses.html") {
+  }
 }
 
 window.onload = () => {
@@ -172,7 +178,8 @@ async function enroll(sessionID) {
     if (data.success) {
       showConfirmation("Enrolled successfully!");
       addNotification("Successfully enrolled!");
-      loadMyCourses();
+    
+      loadPage("dashboard.html");
     } else {
       showConfirmation(data.message || "Enrollment failed");
     }
@@ -252,13 +259,16 @@ async function loadMyCourses() {
     const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
     const data = await res.json();
 
-    const courses = Array.isArray(data)
-    ? data
-    : data.courses
-    ? data.courses
-    : data.data
-    ? data.data
-    : [];
+    const courses =
+    Array.isArray(data)
+      ? data
+      : data.courses
+      ? data.courses
+      : data.data
+      ? data.data
+      : data.enrollments   // 🔥 ADD THIS
+      ? data.enrollments
+      : [];
     const container = document.getElementById("myCourses");
     container.innerHTML = "";
 
@@ -266,11 +276,21 @@ async function loadMyCourses() {
       const div = document.createElement("div");
 
       div.innerHTML = `
-        <p><strong>${course.CourseName}</strong></p>
-        <p>${course.InstructorName || "TBA"}</p>
-        <p>${course.SectionNumber || "TBA"}</p>
-        <p>${course.MeetingTime || "TBA"}</p>
-      `;
+  <p><strong>${course.CourseName}</strong></p>
+  <p>${course.InstructorName || "TBA"}</p>
+  <p>${course.SectionNumber || "TBA"}</p>
+  <p>${course.MeetingTime || "TBA"}</p>
+
+  <button onclick="dropCourse('${course.SessionID}')">Drop</button>
+
+  <button onclick="loadCourseRoster('${course.SessionID}')">
+    View Roster
+  </button>
+
+  <button onclick="loadWaitlist('${course.SessionID}')">
+    View Waitlist
+  </button>
+`;
 
       container.appendChild(div);
     });
@@ -287,13 +307,16 @@ async function loadSchedule() {
     const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
     const data = await res.json();
 
-    const courses = Array.isArray(data)
-    ? data
-    : data.courses
-    ? data.courses
-    : data.data
-    ? data.data
-    : [];
+    const courses =
+    Array.isArray(data)
+      ? data
+      : data.courses
+      ? data.courses
+      : data.data
+      ? data.data
+      : data.enrollments   // 🔥 ADD THIS
+      ? data.enrollments
+      : [];
     const container = document.getElementById("schedule");
     container.innerHTML = "";
 
@@ -320,14 +343,63 @@ async function loadCourseRoster(sessionID) {
     const students = await res.json();
 
     const container = document.getElementById("rosterList");
-    container.innerHTML = "<h4>Enrolled Students</h4>";
+    container.innerHTML = "<h4>Course Roster</h4>";
 
     students.forEach(s => {
       const p = document.createElement("p");
       p.innerText = `${s.FirstName} ${s.LastName} (${s.StudentID})`;
       container.appendChild(p);
     });
+
   } catch (err) {
     console.error("Roster load error:", err);
+  }
+}
+async function dropCourse(sessionID) {
+  const student = JSON.parse(localStorage.getItem("student"));
+
+  try {
+    const res = await fetch(`${BASE_URL}/drop`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        StudentID: student.StudentID,
+        SessionID: sessionID
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showConfirmation("Course dropped!");
+      loadMyCourses();
+      loadSchedule();
+    } else {
+      showConfirmation(data.message || "Drop failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    showConfirmation("Server error while dropping course");
+  }
+}
+async function loadWaitlist(sessionID) {
+  try {
+    const res = await fetch(`${BASE_URL}/waitlist?sessionID=${sessionID}`);
+    const students = await res.json();
+
+    const container = document.getElementById("rosterList");
+    container.innerHTML = "<h4>Waitlist (FIFO)</h4>";
+
+    students.forEach(s => {
+      const p = document.createElement("p");
+      p.innerText = `${s.FirstName} ${s.LastName} (${s.StudentID})`;
+      container.appendChild(p);
+    });
+
+  } catch (err) {
+    console.error("Waitlist load error:", err);
   }
 }
