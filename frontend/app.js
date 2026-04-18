@@ -5,11 +5,6 @@ async function loadPage(page) {
   const html = await res.text();
   document.getElementById("app").innerHTML = html;
 
-  if (page === "dashboard.html") {
-    loadMyCourses();
-    loadNotifications();
-    loadSchedule();
-  }
 }
 
 window.onload = () => {
@@ -244,9 +239,7 @@ function enableDrag() {
     w.addEventListener("dragover", e => e.preventDefault());
   });
 }
-if (page === "dashboard.html") {
-  enableDrag();
-}
+
 async function loadDashboard() {
   loadMyCourses();
   loadNotifications();
@@ -287,62 +280,6 @@ async function loadMyCourses() {
   }
 }
 
-    async function loadSchedule() {
-      const student = JSON.parse(localStorage.getItem("student"));
-    
-      try {
-        const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-        const data = await res.json();
-    
-        const container = document.getElementById("schedule");
-        container.innerHTML = "";
-    
-        const courses = Array.isArray(data)
-        ? data
-        : data.courses
-        ? data.courses
-        : data.data
-        ? data.data
-        : [];    
-        courses.forEach(course => {
-          const div = document.createElement("div");
-          div.innerHTML = `
-            <p><strong>${course.CourseName}</strong></p>
-            <p>Time: ${course.MeetingTime || "TBD"}</p>
-            <p>Instructor: ${course.InstructorName || "TBA"}</p>
-            <hr/>
-          `;
-          container.appendChild(div);
-        });
-      } catch (err) {
-        console.error("Schedule error:", err);
-      }
-    }
-
-    container.appendChild(div);
-  ;
-
-if (page === "dashboard.html") {
-  loadDashboard();
-  enableDrag();
-}
-function addNotification(message) {
-  let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-  notifications.push(message);
-  localStorage.setItem("notifications", JSON.stringify(notifications));
-}
-function loadNotifications() {
-  const container = document.getElementById("notifications");
-  const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
-
-  container.innerHTML = "";
-
-  notifications.forEach(n => {
-    const p = document.createElement("p");
-    p.innerText = n;
-    container.appendChild(p);
-  });
-}
 async function loadSchedule() {
   const student = JSON.parse(localStorage.getItem("student"));
 
