@@ -2,7 +2,9 @@ const db = require("../db");
 
 const getCourses = async (req, res) => {
   try {
-    const [rows] = await db.execute(`
+    const { department, courseNumber, instructor } = req.query;
+
+    let query = `
       SELECT 
         c.CourseID,
         c.CourseNumber,
@@ -23,6 +25,26 @@ const getCourses = async (req, res) => {
       LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
       LEFT JOIN Enrollment e ON s.SessionID = e.SessionID
       WHERE s.isActive = 1
+    `;
+
+    const params = [];
+
+    if (department) {
+      query += ` AND d.DepartmentName LIKE ?`;
+      params.push(`%${department}%`);
+    }
+
+    if (courseNumber) {
+      query += ` AND c.CourseNumber LIKE ?`;
+      params.push(`%${courseNumber}%`);
+    }
+
+    if (instructor) {
+      query += ` AND i.InstructorName LIKE ?`;
+      params.push(`%${instructor}%`);
+    }
+
+    query += `
       GROUP BY
         c.CourseID,
         c.CourseNumber,
@@ -36,7 +58,9 @@ const getCourses = async (req, res) => {
         s.isActive,
         i.InstructorName
       ORDER BY c.CourseNumber, s.SectionNumber
-    `);
+    `;
+
+    const [rows] = await db.execute(query, params);
 
     return res.status(200).json({
       success: true,
