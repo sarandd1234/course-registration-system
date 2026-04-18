@@ -105,13 +105,16 @@ async function searchCourses() {
     console.log("Courses:", data);
     console.log("Search URL:", `${BASE_URL}/courses${query}`);
 
-    const courses = Array.isArray(data)
-    ? data
-    : data.courses
-    ? data.courses
-    : data.data
-    ? data.data
-    : [];
+    const courses =
+    Array.isArray(data)
+      ? data
+      : data.courses
+      ? data.courses
+      : data.data
+      ? data.data
+      : data.enrollments   // 🔥 ADD THIS
+      ? data.enrollments
+      : [];
     const filteredCourses = courses.filter(course => {
       if (course.isActive === false) return false;
       if (course.seatsAvailable !== undefined && course.seatsAvailable <= 0) return false;
@@ -179,6 +182,9 @@ async function enroll(sessionID) {
       showConfirmation("Enrolled successfully!");
       addNotification("Successfully enrolled!");
     
+      loadMyCourses();
+      loadSchedule();
+    
       loadPage("dashboard.html");
     } else {
       showConfirmation(data.message || "Enrollment failed");
@@ -191,7 +197,7 @@ async function enroll(sessionID) {
 }
 async function joinWaitlist(sessionID) {
   const student = JSON.parse(localStorage.getItem("student"));
-
+  const container = document.getElementById("waitlistList");
   try {
     const res = await fetch(`${BASE_URL}/waitlist`, {
       method: "POST",
@@ -230,6 +236,7 @@ function showConfirmation(message) {
 }
 function enableDrag() {
   const widgets = document.querySelectorAll(".widget");
+  if (!widgets.length) return;
 
   widgets.forEach(w => {
     w.draggable = true;
@@ -286,10 +293,9 @@ async function loadMyCourses() {
   <button onclick="loadCourseRoster('${course.SessionID}')">
     View Roster
   </button>
-
   <button onclick="loadWaitlist('${course.SessionID}')">
-    View Waitlist
-  </button>
+  View Waitlist
+</button>
 `;
 
       container.appendChild(div);
