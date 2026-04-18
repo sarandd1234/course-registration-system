@@ -102,9 +102,15 @@ async function searchCourses() {
     const data = await response.json();
 
     console.log("Courses:", data);
+    console.log("Search URL:", `${BASE_URL}/courses${query}`);
 
-    const courses = data.courses || data;
-
+    const courses = Array.isArray(data)
+    ? data
+    : data.courses
+    ? data.courses
+    : data.data
+    ? data.data
+    : [];
     const filteredCourses = courses.filter(course => {
       if (course.isActive === false) return false;
       if (course.seatsAvailable !== undefined && course.seatsAvailable <= 0) return false;
@@ -132,17 +138,20 @@ function displayCourses(courses) {
     const div = document.createElement("div");
 
     div.innerHTML = `
-      <p><strong>${course.CourseName}</strong></p>
-      <p>Course: ${course.CourseNumber}</p>
-      <p>Department: ${course.DepartmentName || course.DepartmentID}</p>
+      <p>Course: ${course.CourseName}</p>
+      <p>Department: ${course.DepartmentName || "TBA"}</p>
       <p>Instructor: ${course.InstructorName || "TBA"}</p>
-      <p>Credits: ${course.Credits || "TBA"}</p>
+      <p>Section: ${course.SectionNumber || "TBA"}</p>
       <p>Time: ${course.MeetingTime || "TBA"}</p>
-      <p>Seats Available: ${course.seatsAvailable ?? "TBA"}</p>
-      ${course.seatsAvailable > 0 
+      <p>Credits: ${course.Credits || "TBA"}</p>
+      <p>Seats: ${course.seatsAvailable ?? "TBA"}</p>
+      <p>Status: ${course.isActive ? "Active" : "Inactive"}</p>
+      ${course.isActive !== false
         ? `<button onclick="enroll('${course.SessionID}')">Enroll</button>`
-        : `<button onclick="joinWaitlist('${course.SessionID}')">Join Waitlist</button>`
-      }      <hr/>
+        : ""
+      }
+      <button onclick="joinWaitlist('${course.SessionID}')">Join Waitlist</button>
+      <hr/>
     `;
 
     resultsDiv.appendChild(div);
@@ -167,16 +176,15 @@ async function enroll(sessionID) {
 
     if (data.success) {
       showConfirmation("Enrolled successfully!");
+      addNotification("Successfully enrolled!");
+      loadMyCourses();
     } else {
-      alert(data.message || "Enrollment failed");
+      showConfirmation(data.message || "Enrollment failed");
     }
 
   } catch (err) {
     console.error(err);
-  }
-  if (data.success) {
-    addNotification("Successfully enrolled!");
-    showConfirmation("Enrolled successfully!");
+    showConfirmation("Server error during enrollment");
   }
 }
 async function joinWaitlist(sessionID) {
@@ -239,24 +247,45 @@ function enableDrag() {
 if (page === "dashboard.html") {
   enableDrag();
 }
+async function loadDashboard() {
+  loadMyCourses();
+  loadNotifications();
+  loadSchedule();
+}
 async function loadMyCourses() {
   const student = JSON.parse(localStorage.getItem("student"));
 
-  const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
+    const data = await res.json();
 
-  const container = document.getElementById("myCourses");
-  container.innerHTML = "";
+    const courses = Array.isArray(data)
+    ? data
+    : data.courses
+    ? data.courses
+    : data.data
+    ? data.data
+    : [];
+    const container = document.getElementById("myCourses");
+    container.innerHTML = "";
 
-  data.forEach(course => {
-    const div = document.createElement("div");
+    courses.forEach(course => {
+      const div = document.createElement("div");
 
-    div.innerHTML = `
-      <p><strong>${course.CourseName}</strong></p>
-      <p>${course.InstructorName}</p>
-      <p>${course.SectionNumber}</p>
-      <p>${course.MeetingTime}</p>
-    `;
+      div.innerHTML = `
+        <p><strong>${course.CourseName}</strong></p>
+        <p>${course.InstructorName || "TBA"}</p>
+        <p>${course.SectionNumber || "TBA"}</p>
+        <p>${course.MeetingTime || "TBA"}</p>
+      `;
+
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Dashboard error:", err);
+  }
+}
 
     async function loadSchedule() {
       const student = JSON.parse(localStorage.getItem("student"));
@@ -268,9 +297,13 @@ async function loadMyCourses() {
         const container = document.getElementById("schedule");
         container.innerHTML = "";
     
-        // Data is the array itself
-        const courses = data.courses || data; 
-    
+        const courses = Array.isArray(data)
+        ? data
+        : data.courses
+        ? data.courses
+        : data.data
+        ? data.data
+        : [];    
         courses.forEach(course => {
           const div = document.createElement("div");
           div.innerHTML = `
@@ -287,10 +320,11 @@ async function loadMyCourses() {
     }
 
     container.appendChild(div);
-  });
-}
+  ;
+
 if (page === "dashboard.html") {
-  loadMyCourses();
+  loadDashboard();
+  enableDrag();
 }
 function addNotification(message) {
   let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
@@ -312,22 +346,35 @@ function loadNotifications() {
 async function loadSchedule() {
   const student = JSON.parse(localStorage.getItem("student"));
 
-  const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/enrollments?studentID=${student.StudentID}`);
+    const data = await res.json();
 
-  const container = document.getElementById("schedule");
-  container.innerHTML = "";
+    const courses = Array.isArray(data)
+    ? data
+    : data.courses
+    ? data.courses
+    : data.data
+    ? data.data
+    : [];
+    const container = document.getElementById("schedule");
+    container.innerHTML = "";
 
-  data.courses.forEach(course => {
-    const div = document.createElement("div");
+    courses.forEach(course => {
+      const div = document.createElement("div");
+      div.classList.add("schedule-item");
 
-    div.innerHTML = `
-      <p><strong>${course.CourseName}</strong></p>
-      <p>Time: ${course.MeetingTime || "TBD"}</p>
-    `;
+      div.innerHTML = `
+        <p><strong>${course.CourseName}</strong></p>
+        <p>Time: ${course.MeetingTime || "TBD"}</p>
+      `;
 
-    container.appendChild(div);
-  });
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error("Schedule error:", err);
+  }
 }
 
 async function loadCourseRoster(sessionID) {
