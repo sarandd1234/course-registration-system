@@ -14,11 +14,13 @@ const getCourses = async (req, res) => {
         s.MeetingTime,
         s.Capacity,
         s.isActive,
+        i.InstructorName,
         COUNT(e.EnrollmentID) AS enrolledCount,
         (s.Capacity - COUNT(e.EnrollmentID)) AS seatsAvailable
       FROM Courses c
       JOIN Departments d ON c.DepartmentID = d.DepartmentID
       JOIN Sessions s ON c.CourseID = s.CourseID
+      LEFT JOIN Instructors i ON s.InstructorID = i.InstructorID
       LEFT JOIN Enrollment e ON s.SessionID = e.SessionID
       WHERE s.isActive = 1
       GROUP BY
@@ -31,7 +33,8 @@ const getCourses = async (req, res) => {
         s.SectionNumber,
         s.MeetingTime,
         s.Capacity,
-        s.isActive
+        s.isActive,
+        i.InstructorName
       ORDER BY c.CourseNumber, s.SectionNumber
     `);
 
