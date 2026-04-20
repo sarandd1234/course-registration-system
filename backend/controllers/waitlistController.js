@@ -126,11 +126,11 @@ const addToWaitlist = async (req, res) => {
     }
 
     const [positionRows] = await db.execute(
-      `SELECT COUNT(*) AS count FROM Waitlist WHERE SessionID = ?`,
+      `SELECT MAX(Position) AS maxPos FROM Waitlist WHERE SessionID = ?`,
       [SessionID]
     );
 
-    const nextPosition = Number(positionRows[0].count) + 1;
+    const nextPosition = Number(positionRows[0].maxPos || 0) + 1;
 
     await db.execute(
       `

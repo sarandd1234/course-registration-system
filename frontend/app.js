@@ -237,9 +237,8 @@ async function displayCourses(courses) {
 
       const waitlistRes = await fetch(`${BASE_URL}/waitlist/student/${student.StudentID}`);
       const waitlistData = await waitlistRes.json();
-      waitlistedSessionIds = Array.isArray(waitlistData)
-        ? waitlistData.map(item => String(item.SessionID))
-        : [];
+      const waitlistRows = Array.isArray(waitlistData) ? waitlistData : waitlistData.data || [];
+      waitlistedSessionIds = waitlistRows.map(item => String(item.SessionID));
     }
   } catch (error) {
     console.error("Status preload error:", error);
@@ -445,7 +444,8 @@ async function loadMyWaitlist() {
 
   try {
     const res = await fetch(`${BASE_URL}/waitlist/student/${student.StudentID}`);
-    const rows = await res.json();
+    const result = await res.json();
+    const rows = Array.isArray(result) ? result : result.data || [];
 
     container.innerHTML = "";
 
@@ -455,7 +455,7 @@ async function loadMyWaitlist() {
     }
 
     rows.forEach(item => {
-      const displayPosition = Number(item.Position) + 1;
+      const displayPosition = Number(item.Position);
 
       const div = document.createElement("div");
       div.className = "dashboard-item";
@@ -488,7 +488,9 @@ async function loadCourseRoster(sessionID) {
       return;
     }
 
-    const students = await res.json();
+    const result = await res.json();
+    const students = result.data || [];
+
     container.innerHTML = "<div class='panel-title'>Course Roster</div>";
 
     if (!students.length) {
@@ -499,7 +501,7 @@ async function loadCourseRoster(sessionID) {
     students.forEach(student => {
       const row = document.createElement("div");
       row.className = "mini-row";
-      row.innerText = `${student.FirstName} ${student.LastName} (${student.StudentID})`;
+      row.innerText = `${student.StudentName} (${student.StudentID}) - ${student.Status}${student.WaitlistPosition ? ` [Position ${student.WaitlistPosition}]` : ""}`;
       container.appendChild(row);
     });
   } catch (err) {
@@ -520,7 +522,9 @@ async function loadSessionWaitlist(sessionID) {
       return;
     }
 
-    const rows = await res.json();
+    const result = await res.json();
+    const rows = result.data || [];
+
     container.innerHTML = "<div class='panel-title'>Session Waitlist</div>";
 
     if (!rows.length) {
@@ -529,7 +533,7 @@ async function loadSessionWaitlist(sessionID) {
     }
 
     rows.forEach(student => {
-      const displayPosition = Number(student.Position) + 1;
+      const displayPosition = Number(student.Position);
       const row = document.createElement("div");
       row.className = "mini-row";
       row.innerText = `#${displayPosition} - ${student.FirstName} ${student.LastName} (${student.StudentID})`;
