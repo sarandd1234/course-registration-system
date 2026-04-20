@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { getCourseRoster } = require("../controllers/rosterController");
 
-// Get roster by session
-router.get("/:sessionID", getCourseRoster);
+router.get("/:sessionId", getCourseRoster);
 
 module.exports = router;

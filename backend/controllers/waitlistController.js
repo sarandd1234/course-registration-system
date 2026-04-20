@@ -58,6 +58,25 @@ const addToWaitlist = async (req, res) => {
   }
 
   try {
+    const [sessionRows] = await db.execute(
+      `SELECT SessionID, Capacity, isActive FROM Sessions WHERE SessionID = ?`,
+      [SessionID]
+    );
+
+    if (sessionRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found"
+      });
+    }
+
+    if (!sessionRows[0].isActive) {
+      return res.status(400).json({
+        success: false,
+        message: "Session is not active"
+      });
+    }
+
     const [enrolled] = await db.execute(
       `SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?`,
       [StudentID, SessionID]
@@ -91,12 +110,27 @@ const addToWaitlist = async (req, res) => {
       });
     }
 
+    const [enrollmentCountRows] = await db.execute(
+      `SELECT COUNT(*) AS enrolledCount FROM Enrollment WHERE SessionID = ?`,
+      [SessionID]
+    );
+
+    const enrolledCount = Number(enrollmentCountRows[0].enrolledCount);
+    const capacity = Number(sessionRows[0].Capacity);
+
+    if (enrolledCount < capacity) {
+      return res.status(400).json({
+        success: false,
+        message: "Seats are still available. Student should enroll directly instead of waitlisting."
+      });
+    }
+
     const [positionRows] = await db.execute(
       `SELECT COUNT(*) AS count FROM Waitlist WHERE SessionID = ?`,
       [SessionID]
     );
 
-    const nextPosition = Number(positionRows[0].count);
+    const nextPosition = Number(positionRows[0].count) + 1;
 
     await db.execute(
       `
@@ -108,19 +142,20 @@ const addToWaitlist = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Added to waitlist successfully"
+      message: `Added to waitlist successfully at position ${nextPosition}`
     });
   } catch (error) {
     console.error("Waitlist add error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to add student to waitlist"
+      message: "Failed to add student to waitlist",
+      error: error.message
     });
   }
 };
 
 const getWaitlistBySession = async (req, res) => {
-  const { sessionID } = req.params;
+  const { sessionId } = req.params;
 
   try {
     const [rows] = await db.execute(
@@ -138,21 +173,26 @@ const getWaitlistBySession = async (req, res) => {
       WHERE w.SessionID = ?
       ORDER BY w.Position ASC, w.WaitlistDate ASC
       `,
-      [sessionID]
+      [sessionId]
     );
 
-    return res.status(200).json(rows);
+    return res.status(200).json({
+      success: true,
+      message: "Waitlist retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Waitlist fetch error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to load waitlist"
+      message: "Failed to load waitlist",
+      error: error.message
     });
   }
 };
 
 const getWaitlistByStudent = async (req, res) => {
-  const { studentID } = req.params;
+  const { studentId } = req.params;
 
   try {
     const [rows] = await db.execute(
@@ -167,7 +207,7 @@ const getWaitlistByStudent = async (req, res) => {
         c.CourseNumber,
         sess.SectionNumber,
         sess.MeetingTime,
-        i.InstructorName
+        COALESCE(i.InstructorName, 'TBA') AS InstructorName
       FROM Waitlist w
       JOIN Sessions sess ON w.SessionID = sess.SessionID
       JOIN Courses c ON sess.CourseID = c.CourseID
@@ -175,15 +215,20 @@ const getWaitlistByStudent = async (req, res) => {
       WHERE w.StudentID = ?
       ORDER BY w.WaitlistDate DESC
       `,
-      [studentID]
+      [studentId]
     );
 
-    return res.status(200).json(rows);
+    return res.status(200).json({
+      success: true,
+      message: "Student waitlist retrieved successfully",
+      data: rows
+    });
   } catch (error) {
     console.error("Student waitlist fetch error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to load student waitlist"
+      message: "Failed to load student waitlist",
+      error: error.message
     });
   }
 };

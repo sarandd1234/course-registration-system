@@ -12,7 +12,7 @@ const dropCourse = async (req, res) => {
     }
 
     const [enrollmentRows] = await db.execute(
-      "SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
+      `SELECT * FROM Enrollment WHERE StudentID = ? AND SessionID = ?`,
       [StudentID, SessionID]
     );
 
@@ -24,16 +24,73 @@ const dropCourse = async (req, res) => {
     }
 
     await db.execute(
-      "DELETE FROM Enrollment WHERE StudentID = ? AND SessionID = ?",
+      `DELETE FROM Enrollment WHERE StudentID = ? AND SessionID = ?`,
       [StudentID, SessionID]
     );
 
+    const [waitlistRows] = await db.execute(
+      `
+      SELECT WaitlistID, StudentID, Position
+      FROM Waitlist
+      WHERE SessionID = ?
+      ORDER BY Position ASC, WaitlistDate ASC
+      LIMIT 1
+      `,
+      [SessionID]
+    );
+
+    let promotedStudent = null;
+
+    if (waitlistRows.length > 0) {
+      const nextStudent = waitlistRows[0];
+
+      await db.execute(
+        `
+        INSERT INTO Enrollment (StudentID, SessionID)
+        VALUES (?, ?)
+        `,
+        [nextStudent.StudentID, SessionID]
+      );
+
+      await db.execute(
+        `
+        DELETE FROM Waitlist
+        WHERE WaitlistID = ?
+        `,
+        [nextStudent.WaitlistID]
+      );
+
+      await db.execute(
+        `
+        UPDATE Waitlist w
+        JOIN (
+          SELECT
+            WaitlistID,
+            ROW_NUMBER() OVER (
+              PARTITION BY SessionID
+              ORDER BY WaitlistDate, WaitlistID
+            ) AS CorrectPosition
+          FROM Waitlist
+          WHERE SessionID = ?
+        ) ranked
+        ON w.WaitlistID = ranked.WaitlistID
+        SET w.Position = ranked.CorrectPosition
+        `,
+        [SessionID]
+      );
+
+      promotedStudent = nextStudent.StudentID;
+    }
+
     return res.status(200).json({
       success: true,
-      message: "Course dropped successfully",
+      message: promotedStudent
+        ? "Course dropped successfully and first waitlisted student was enrolled"
+        : "Course dropped successfully",
       data: {
-        StudentID,
-        SessionID
+        droppedStudent: StudentID,
+        SessionID,
+        promotedStudent
       }
     });
   } catch (error) {

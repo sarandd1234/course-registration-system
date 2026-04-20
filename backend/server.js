@@ -11,6 +11,7 @@ const dropRoutes = require("./routes/dropRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const rosterRoutes = require("./routes/rosterRoutes");
 const db = require("./db");
+const academicProgressRoutes = require("./routes/academicProgressRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/waitlist", waitlistRoutes);
 app.use("/api/drop", dropRoutes);
 app.use("/api/schedule", scheduleRoutes);
 app.use("/api/roster", rosterRoutes);
+app.use("/api/academic-progress", academicProgressRoutes);
 
 // Home Route
 app.get("/", (req, res) => {

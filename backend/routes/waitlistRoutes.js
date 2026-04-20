@@ -7,7 +7,7 @@ const {
 } = require("../controllers/waitlistController");
 
 router.post("/", addToWaitlist);
-router.get("/session/:sessionID", getWaitlistBySession);
-router.get("/student/:studentID", getWaitlistByStudent);
+router.get("/session/:sessionId", getWaitlistBySession);
+router.get("/student/:studentId", getWaitlistByStudent);
 
 module.exports = router;
