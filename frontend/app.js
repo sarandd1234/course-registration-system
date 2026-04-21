@@ -576,4 +576,3 @@ async function dropCourse(sessionID, courseName) {
 
 function downloadSchedulePDF() {
   showConfirmation("PDF download coming soon", true);
-}
