@@ -465,6 +465,7 @@ async function loadMyWaitlist() {
         <div class="item-meta">${item.InstructorName || "TBA"}</div>
         <div class="waitlist-position">Waitlist Position: ${displayPosition}</div>
         <div class="item-actions">
+          <button onclick="dropFromWaitlist('${item.SessionID}', '${item.CourseName}')">Drop</button>
           <button class="secondary-btn" onclick="loadSessionWaitlist('${item.SessionID}')">View Waitlist</button>
         </div>
       `;
@@ -574,6 +575,36 @@ async function dropCourse(sessionID, courseName) {
   }
 }
 
+async function dropFromWaitlist(sessionID, courseName) {
+  const student = JSON.parse(localStorage.getItem("student"));
+  if (!student) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/waitlist`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        StudentID: student.StudentID,
+        SessionID: sessionID
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      addNotification(`Removed from waitlist for ${courseName}`);
+      showConfirmation(data.message || `Removed from waitlist for ${courseName}`, true);
+      await loadDashboard();
+      await searchCourses();
+    } else {
+      showConfirmation(data.message || "Waitlist drop failed", false);
+    }
+  } catch (err) {
+    console.error("Waitlist drop error:", err);
+    showConfirmation("Server error while removing from waitlist", false);
+  }
+}
+
 function downloadSchedulePDF() {
   showConfirmation("PDF download coming soon", true);
-} 
+}

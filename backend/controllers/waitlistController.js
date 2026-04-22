@@ -154,6 +154,65 @@ const addToWaitlist = async (req, res) => {
   }
 };
 
+const dropFromWaitlist = async (req, res) => {
+  const { StudentID, SessionID } = req.body;
+
+  if (!StudentID || !SessionID) {
+    return res.status(400).json({
+      success: false,
+      message: "StudentID and SessionID are required"
+    });
+  }
+
+  try {
+    const [existingWaitlist] = await db.execute(
+      `SELECT * FROM Waitlist WHERE StudentID = ? AND SessionID = ?`,
+      [StudentID, SessionID]
+    );
+
+    if (existingWaitlist.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Student is not on the waitlist for this session"
+      });
+    }
+
+    await db.execute(
+      `DELETE FROM Waitlist WHERE StudentID = ? AND SessionID = ?`,
+      [StudentID, SessionID]
+    );
+
+    const [remainingRows] = await db.execute(
+      `
+      SELECT WaitlistID
+      FROM Waitlist
+      WHERE SessionID = ?
+      ORDER BY Position ASC, WaitlistDate ASC
+      `,
+      [SessionID]
+    );
+
+    for (let i = 0; i < remainingRows.length; i++) {
+      await db.execute(
+        `UPDATE Waitlist SET Position = ? WHERE WaitlistID = ?`,
+        [i + 1, remainingRows[i].WaitlistID]
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Removed from waitlist successfully"
+    });
+  } catch (error) {
+    console.error("Waitlist drop error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove student from waitlist",
+      error: error.message
+    });
+  }
+};
+
 const getWaitlistBySession = async (req, res) => {
   const { sessionId } = req.params;
 
@@ -235,6 +294,7 @@ const getWaitlistByStudent = async (req, res) => {
 
 module.exports = {
   addToWaitlist,
+  dropFromWaitlist,
   getWaitlistBySession,
   getWaitlistByStudent
 };
