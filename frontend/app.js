@@ -104,9 +104,7 @@ function showConfirmation(message, isSuccess = true) {
   }
 
   popup.className = isSuccess ? "popup success" : "popup error";
-  popup.innerText = message;
-  popup.style.display = "block";
-
+  popup.innerHTML = `<strong>${isSuccess ? "Success:" : "Error:"}</strong> ${message}`;  popup.style.display = "block";
   setTimeout(() => {
     popup.style.display = "none";
   }, 2800);
@@ -321,6 +319,7 @@ async function enroll(sessionID, courseName) {
       addNotification(`Enrolled in ${courseName}`);
       showConfirmation(data.message || `Enrolled in ${courseName}`, true);
       await loadPage("dashboard.html");
+      await searchCourses();
     } else {
       showConfirmation(data.message || "Enrollment failed", false);
       await searchCourses();
@@ -351,6 +350,7 @@ async function joinWaitlist(sessionID, courseName) {
       addNotification(`Added to waitlist for ${courseName}`);
       showConfirmation(data.message || `Added to waitlist for ${courseName}`, true);
       await loadPage("dashboard.html");
+      await searchCourses();
     } else {
       showConfirmation(data.message || "Waitlist failed", false);
       await searchCourses();
@@ -366,6 +366,7 @@ async function loadDashboard() {
   await loadMyCourses();
   await loadSchedule();
   await loadMyWaitlist();
+  await loadAcademicProgress();
 }
 
 async function loadMyCourses() {
@@ -434,6 +435,29 @@ async function loadSchedule() {
   } catch (err) {
     console.error("Schedule error:", err);
     container.innerHTML = "<p>Unable to load schedule.</p>";
+  }
+}
+async function loadAcademicProgress() {
+  const student = JSON.parse(localStorage.getItem("student"));
+  const container = document.getElementById("academicProgress");
+
+  if (!student || !container) return;
+
+  try {
+    const res = await fetch(`${BASE_URL}/academic-progress/${student.StudentID}`);
+    const data = await res.json();
+
+    const progress = data.data || data;
+
+    container.innerHTML = `
+      <div class="mini-row"><strong>Credits Completed:</strong> ${progress.completedCredits || 0}</div>
+      <div class="mini-row"><strong>Credits In Progress:</strong> ${progress.currentCredits || 0}</div>
+      <div class="mini-row"><strong>Credits Remaining:</strong> ${progress.remainingCredits || 0}</div>
+      <div class="mini-row"><strong>GPA:</strong> ${progress.gpa || "N/A"}</div>
+    `;
+  } catch (err) {
+    console.error("Academic progress error:", err);
+    container.innerHTML = "<p>Unable to load academic progress.</p>";
   }
 }
 
